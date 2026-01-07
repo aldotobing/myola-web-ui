@@ -35,7 +35,7 @@ export default function AddToCartToast({
         <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
         <div className="flex-1">
           <p className="font-bold text-gray-900">
-            Item ditambahkan ke keranjang tes
+            Item ditambahkan ke keranjang
           </p>
           <p className="text-sm text-gray-600 truncate">{productName}</p>
         </div>
