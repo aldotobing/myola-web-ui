@@ -16,7 +16,7 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { getEventDetailBySlug } from "@/lib/eventData";
+import { getEventDetailBySlug } from "@/service/eventData";
 
 export default function eventDetailPage() {
   const router = useRouter();

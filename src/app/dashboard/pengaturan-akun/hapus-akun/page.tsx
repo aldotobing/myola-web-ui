@@ -32,8 +32,8 @@ import { useRouter } from "next/navigation";
 import {
   changePassword,
   getPasswordStrength,
-} from "@/lib/api/account-settings";
-import { deleteAccount } from "@/lib/api/account-settings";
+} from "@/lib/service/member/account-settings";
+import { deleteAccount } from "@/lib/service/member/account-settings";
 import { DeleteAccountData } from "@/types/account-settings";
 
 export default function DeleteAccountPage() {

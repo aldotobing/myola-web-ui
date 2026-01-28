@@ -7,11 +7,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { isMemberActive, useAuth } from "@/app/contexts/AuthContexts";
-import { getUserAddresses } from "@/lib/api/addresses";
+import { getUserAddresses } from "@/lib/service/member/addresses";
 import { Address } from "@/types/address";
 import { CartItem } from "@/types/cart";
 import AddressFormModal from "@/components/addresses/AddressFormModal";
-import { createAddress } from "@/lib/api/addresses";
+import { createAddress } from "@/lib/service/member/addresses";
 import { AddressFormData } from "@/types/address";
 import Link from "next/link";
 

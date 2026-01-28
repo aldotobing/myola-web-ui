@@ -23,7 +23,7 @@ import OrderCard from "@/components/orders/OrderCard";
 import { Order, OrderStatus } from "@/types/order";
 import { ChevronDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-const { getAllOrders } = await import("@/lib/api/pesanan");
+const { getAllOrders } = await import("@/lib/service/member/pesanan");
 
 export default function PesananPage() {
   const { user, logout } = useAuth();

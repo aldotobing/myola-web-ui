@@ -7,7 +7,7 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { Search } from "lucide-react";
 import ClassCard, { ClassCardProps } from "@/components/layout/classcard";
-import { COURSES_DATA } from "@/lib/coursesData";
+import { COURSES_DATA } from "@/service/coursesData";
 
 const Akademi = () => {
   const [searchQuery, setSearchQuery] = useState("");

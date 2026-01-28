@@ -7,7 +7,7 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { Search } from "lucide-react";
 import ProductCard, { ProductCardProps } from "@/components/layout/productcard";
-import { PRODUCT_DATA } from "@/lib/productData";
+import { PRODUCT_DATA } from "@/service/productData";
 
 const Store = () => {
   const [searchQuery, setSearchQuery] = useState("");

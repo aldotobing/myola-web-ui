@@ -7,9 +7,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { Star, Minus, Plus, ShoppingCart, X, CheckCircle } from "lucide-react";
-import { getProductDetailBySlug } from "@/lib/productData";
+import { getProductDetailBySlug } from "@/service/productData";
 import ProductCard from "@/components/layout/productcard";
-import { PRODUCT_DETAIL_DATA } from "@/lib/productData";
+import { PRODUCT_DETAIL_DATA } from "@/service/productData";
 import { useCart } from "@/app/contexts/CartContexts";
 import AddToCartToast from "@/components/cart/AddToCartToast";
 

@@ -23,7 +23,7 @@ import { useParams, useRouter } from "next/navigation";
 import OrderCard from "@/components/orders/OrderCard";
 import { Order } from "@/types/order";
 import OrderProgress from "@/components/orders/OrderProgress";
-import { confirmOrderDelivery, getOrderByNumber } from "@/lib/api/pesanan";
+import { confirmOrderDelivery, getOrderByNumber } from "@/lib/service/member/pesanan";
 import DeliveryConfirmationModal from "@/components/orders/DeliveryConfirmationModal";
 import DeliveryProofModal from "@/components/orders/DeliveryProofModal";
 

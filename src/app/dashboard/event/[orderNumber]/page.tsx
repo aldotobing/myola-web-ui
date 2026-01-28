@@ -30,7 +30,7 @@ import {
   getEventOrderByNumber,
   downloadETicket,
   resendETicket,
-} from "@/lib/api/events";
+} from "@/lib/service/member/events";
 import { EventOrder } from "@/types/event";
 
 export default function EventDetailPage() {

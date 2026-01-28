@@ -21,7 +21,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getUserEventOrders, getEventOrderCounts } from "@/lib/api/events";
+import { getUserEventOrders, getEventOrderCounts } from "@/lib/service/member/events";
 import { EventOrder, EventStatus } from "@/types/event";
 import EventOrderCard from "@/components/events/EventOrdercard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

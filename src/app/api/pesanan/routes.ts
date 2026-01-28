@@ -2,7 +2,7 @@
 "use client";
 
 import { NextResponse } from "next/server";
-import { getAllOrders } from "@/lib/api/pesanan";
+import { getAllOrders } from "@/lib/service/member/pesanan";
 
 export async function GET() {
   try {

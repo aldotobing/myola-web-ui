@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Course, Video } from "@/types/kelas";
-import { completeVideo, getCourseById, getCurrentVideo } from "@/lib/api/kelas";
+import { completeVideo, getCourseById, getCurrentVideo } from "@/lib/service/member/kelas";
 import { Play } from "next/font/google";
 
 export default function KelasDetailPage() {

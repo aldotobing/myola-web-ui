@@ -27,7 +27,7 @@ import {
   updateAddress,
   deleteAddress,
   setPrimaryAddress,
-} from "@/lib/api/addresses";
+} from "@/lib/service/member/addresses";
 import { Address, AddressFormData } from "@/types/address";
 import AddressCard from "@/components/addresses/AddressCard";
 import AddressFormModal from "@/components/addresses/AddressFormModal";

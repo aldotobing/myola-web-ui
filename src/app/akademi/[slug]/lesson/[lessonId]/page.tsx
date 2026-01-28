@@ -16,7 +16,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { getLessonDetailBySlug } from "@/lib/coursesData";
+import { getLessonDetailBySlug } from "@/service/coursesData";
 import { isMemberActive, useAuth } from "@/app/contexts/AuthContexts";
 import Link from "next/link";
 

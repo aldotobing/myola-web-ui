@@ -31,7 +31,7 @@ import { useRouter } from "next/navigation";
 import {
   changePassword,
   getPasswordStrength,
-} from "@/lib/api/account-settings";
+} from "@/lib/service/member/account-settings";
 import { ChangePasswordData } from "@/types/account-settings";
 
 export default function ChangePasswordPage() {

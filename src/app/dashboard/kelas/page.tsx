@@ -19,7 +19,7 @@ import {
   User2Icon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getUserCourses } from "@/lib/api/kelas";
+import { getUserCourses } from "@/lib/service/member/kelas";
 import { Course } from "@/types/kelas";
 import CourseCard from "@/components/kelas/KelasCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

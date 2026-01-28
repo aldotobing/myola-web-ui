@@ -3,7 +3,7 @@
 
 // src/app/api/pesanan/[orderNumber]/route.ts
 import { NextResponse } from "next/server";
-import { getOrderByNumber } from "@/lib/api/pesanan";
+import { getOrderByNumber } from "@/lib/service/member/pesanan";
 
 export async function GET(
   request: Request,

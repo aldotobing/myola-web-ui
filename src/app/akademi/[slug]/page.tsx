@@ -8,7 +8,7 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { Search } from "lucide-react";
 import LessonCard, { LessonCardProps } from "@/components/layout/lessoncard";
-import { getCourseBySlug, getLessonsByCourseSlug } from "@/lib/coursesData";
+import { getCourseBySlug, getLessonsByCourseSlug } from "@/service/coursesData";
 import { useParams } from "next/navigation";
 
 export default function CourseDetailPage() {
