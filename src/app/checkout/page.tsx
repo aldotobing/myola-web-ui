@@ -119,7 +119,7 @@ export default function CheckoutPage() {
     setRedeemPoints(Math.min(numValue, maxRedeem));
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     // Check if address is filled
     if (
       !selectedAddress ||
@@ -131,33 +131,57 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validate phone number (minimal 10 digits)
     const phoneDigits = selectedAddress.phoneNumber.replace(/\D/g, "");
     if (phoneDigits.length < 10) {
       alert("Nomor HP minimal 10 digit");
       return;
     }
 
-    // Store payment data for payment page
-    const paymentData = {
-      type: "product", // Identify as product payment
-      items: checkoutItems,
-      subtotal: subtotal,
-      redeemPoints: redeemPoints,
-      totalAfterRedeem: totalAfterRedeem,
-      ppn: ppn,
-      shippingCost: shippingCost,
-      totalBayar: totalBayar,
-      totalCashback: totalCashback,
-      address: selectedAddress,
-      timestamp: new Date().toISOString(),
-      isGuest: !isLoggedIn, // Flag to identify guest checkout
-    };
+    setLoading(true);
 
-    localStorage.setItem("payment_data", JSON.stringify(paymentData));
+    try {
+      // 1. Create order in database first
+      const response = await fetch("/api/member/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: checkoutItems,
+          subtotal: subtotal,
+          redeemPoints: redeemPoints,
+          totalAfterRedeem: totalAfterRedeem,
+          ppn: ppn,
+          shippingCost: shippingCost,
+          totalBayar: totalBayar,
+          totalCashback: totalCashback,
+          address: selectedAddress,
+          paymentMethod: "QRIS", // Default for now
+        }),
+      });
 
-    // Redirect to payment selection
-    router.push("/payment/select");
+      const result = await response.json();
+
+      if (!response.ok) throw new Error(result.error || "Failed to create order");
+
+      // 2. Store payment data for payment page
+      const paymentData = {
+        type: "product",
+        orderNumber: result.orderNumber,
+        subtotal: subtotal,
+        totalBayar: totalBayar,
+        totalCashback: totalCashback,
+        timestamp: new Date().toISOString(),
+      };
+
+      localStorage.setItem("payment_data", JSON.stringify(paymentData));
+      localStorage.removeItem("checkout_items");
+
+      // 3. Redirect to payment selection
+      router.push("/payment/select");
+    } catch (error: any) {
+      alert("Gagal memproses pesanan: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {

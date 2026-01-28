@@ -59,7 +59,7 @@ export default function LoginPage() {
 
         if (data.user) {
           // Success! onAuthStateChange in AuthContext will handle the profile fetching and state update
-          router.push("/");
+          router.push("/dashboard");
           router.refresh(); // Refresh to update server-side state if needed
         }
       } catch (error) {

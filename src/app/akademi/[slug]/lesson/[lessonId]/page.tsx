@@ -73,11 +73,21 @@ export default function LessonDetailPage() {
 
     setIsEnrolling(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/member/akademi/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseId: lesson.courseId || courseSlug // Fallback if courseId not in lesson object
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to enroll");
+
       alert("Kursus berhasil ditambahkan ke dashboard Anda!");
       router.push("/dashboard/kelas");
-    } catch (error) {
-      alert("Terjadi kesalahan. Silakan coba lagi.");
+    } catch (error: any) {
+      alert("Gagal mengambil kursus: " + error.message);
       setIsEnrolling(false);
     }
   };

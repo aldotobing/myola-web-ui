@@ -178,13 +178,13 @@ export async function confirmOrderDelivery(
       const filePath = `delivery-proofs/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('delivery-proofs')
+        .from('myola')
         .upload(filePath, photoFile);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('delivery-proofs')
+        .from('myola')
         .getPublicUrl(filePath);
       
       photoUrl = publicUrl;

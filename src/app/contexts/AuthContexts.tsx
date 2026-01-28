@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("status", "active")
         .order("activated_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         setUser({

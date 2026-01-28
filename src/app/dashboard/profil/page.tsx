@@ -64,12 +64,23 @@ export default function ProfilePage() {
       // Fetch membership info
       getMembership(user.id).then(data => setMembership(data));
       
-      // If has KTP image, get public URL
+      // If has KTP image, get a secure Signed URL
       if (user.ktp_image_url) {
-        const { data: { publicUrl } } = supabase.storage
-          .from('ktp-documents')
-          .getPublicUrl(user.ktp_image_url);
-        setKtpUrl(publicUrl);
+        const getSignedUrl = async () => {
+          const { data, error } = await supabase.storage
+            .from('myola')
+            .createSignedUrl(user.ktp_image_url!, 3600); // URL valid for 1 hour
+          
+          if (error) {
+            console.error("Error creating signed URL:", error.message, "Path:", user.ktp_image_url);
+            return;
+          }
+
+          if (data) {
+            setKtpUrl(data.signedUrl);
+          }
+        };
+        getSignedUrl();
       }
     }
   }, [user, supabase]);
@@ -121,10 +132,10 @@ export default function ProfilePage() {
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `ktp-documents/${fileName}`;
+        const filePath = `ktp/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('ktp-documents')
+          .from('myola')
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;

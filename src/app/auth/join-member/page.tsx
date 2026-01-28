@@ -103,19 +103,19 @@ export default function JoinMemberPage() {
 
         const userId = result.userId;
 
-        // 2. Upload KTP to Storage if needed (can also be done in API if using admin client)
+        // 2. Upload KTP using API (which uses Admin Client to bypass RLS)
         if (formData.uploadKTP) {
-          const fileExt = formData.uploadKTP.name.split('.').pop();
-          const fileName = `${userId}-${Date.now()}.${fileExt}`;
-          const filePath = `ktp-documents/${fileName}`;
+          const uploadFormData = new FormData();
+          uploadFormData.append('file', formData.uploadKTP);
+          uploadFormData.append('userId', userId);
 
-          const { error: uploadError } = await supabase.storage
-            .from('ktp-documents')
-            .upload(filePath, formData.uploadKTP);
+          const uploadResponse = await fetch("/api/member/upload-ktp", {
+            method: "POST",
+            body: uploadFormData,
+          });
 
-          if (!uploadError) {
-             // Update profile with KTP URL
-             await supabase.from('profiles').update({ ktp_image_url: filePath }).eq('user_id', userId);
+          if (!uploadResponse.ok) {
+            console.error("KTP Upload failed, but continuing registration...");
           }
         }
 
@@ -124,7 +124,8 @@ export default function JoinMemberPage() {
           type: "member",
           userId: userId,
           email: formData.email,
-          subtotal: 99000,
+          membershipPrice: 99000,
+          ppn: 0,
           totalBayar: 99000,
           totalCashback: 49000,
           timestamp: new Date().toISOString(),

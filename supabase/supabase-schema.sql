@@ -80,7 +80,7 @@ CREATE TABLE addresses (
 -- Sales table (staff with referral codes)
 CREATE TABLE sales (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL UNIQUE REFERENCES public.profiles(user_id) ON DELETE CASCADE,
     referral_code VARCHAR(20) NOT NULL UNIQUE,
     commission_rate DECIMAL(5,4) DEFAULT 0.07, -- 7% default
     total_commission DECIMAL(12,2) DEFAULT 0,
@@ -97,7 +97,7 @@ CREATE TABLE sales (
 -- Memberships table
 CREATE TABLE memberships (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(user_id) ON DELETE CASCADE,
     sales_id UUID REFERENCES sales(id), -- Referral from this sales
     payment_amount DECIMAL(10,2) NOT NULL DEFAULT 99000,
     payment_method VARCHAR(50), -- 'va', 'ewallet', 'credit_card'
@@ -619,6 +619,17 @@ CREATE POLICY "Admins can update all profiles"
     ON profiles FOR UPDATE
     USING (public.is_admin());
 
+-- Sales can view profiles of their referred members
+CREATE POLICY "Sales can view referred profiles"
+    ON profiles FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM memberships m
+            JOIN sales s ON s.id = m.sales_id
+            WHERE s.user_id = auth.uid() AND m.user_id = profiles.user_id
+        )
+    );
+
 -- Allow insert during signup
 CREATE POLICY "Users can insert own profile"
     ON profiles FOR INSERT
@@ -1009,6 +1020,166 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 -- 5. 'ktp-documents' - KTP images (private, admin only)
 -- 6. 'delivery-proofs' - Order delivery proof images (private)
 -- 7. 'etickets' - E-ticket PDFs (private)
+
+-- =============================================================================
+-- SPECIAL ADDITION: AUTOMATED BUSINESS LOGIC (TRIGGERS)
+-- =============================================================================
+-- !!! COPY EVERYTHING BELOW INTO SUPABASE SQL EDITOR !!!
+-- =============================================================================
+-- These functions automate:
+-- 1. Linking members to sales via referral codes.
+-- 2. Awarding 49,000 points on membership activation.
+-- 3. Logging Join Member commissions.
+-- 4. Logging 7% transaction commissions on every product order.
+-- 5. Resetting core permissions to ensure schema access.
+-- =============================================================================
+
+-- A. PERMISSION RESET (Run this if you get 'permission denied for schema public')
+GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
+
+-- B. MEMBERSHIP ACTIVATION LOGIC
+-- Awards 49,000 points and logs salesperson commission automatically.
+CREATE OR REPLACE FUNCTION public.handle_membership_activation()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_commission_rate DECIMAL(5,4);
+    v_commission_amount DECIMAL(12,2);
+    v_points_to_award INTEGER := 49000;
+BEGIN
+    -- Only proceed if status is changing from 'pending' to 'active'
+    IF (OLD.status = 'pending' AND NEW.status = 'active') THEN
+        
+        -- 1. Award Points to Profile
+        UPDATE public.profiles
+        SET points_balance = points_balance + v_points_to_award
+        WHERE user_id = NEW.user_id;
+
+        -- 2. Log Point Transaction
+        INSERT INTO public.point_transactions (
+            user_id, amount, transaction_type, balance_after, 
+            reference_type, reference_id, description
+        )
+        SELECT 
+            NEW.user_id, 
+            v_points_to_award, 
+            'join_member', 
+            p.points_balance,
+            'membership', 
+            NEW.id, 
+            'Bonus Join Member Myola'
+        FROM public.profiles p
+        WHERE p.user_id = NEW.user_id;
+
+        -- 3. If there is a referrer (sales_id), log the commission
+        IF NEW.sales_id IS NOT NULL THEN
+            -- Get the sales person's rate (default 0.07 if not specified)
+            SELECT COALESCE(commission_rate, 0.07) INTO v_commission_rate
+            FROM public.sales WHERE id = NEW.sales_id;
+
+            v_commission_amount := NEW.payment_amount * v_commission_rate;
+
+            INSERT INTO public.commissions (
+                sales_id, user_id, commission_type, reference_id,
+                transaction_amount, commission_rate, commission_amount, status
+            ) VALUES (
+                NEW.sales_id, NEW.user_id, 'join_member', NEW.id,
+                NEW.payment_amount, v_commission_rate, v_commission_amount, 'pending'
+            );
+        END IF;
+
+        -- 4. Set activation timestamp
+        NEW.activated_at = NOW();
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- C. AUTOMATIC TRANSACTION COMMISSION (7%)
+-- Logs commission for referred members on every product order.
+CREATE OR REPLACE FUNCTION public.handle_order_commission()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_sales_id UUID;
+    v_commission_rate DECIMAL(5,4);
+    v_commission_amount DECIMAL(12,2);
+BEGIN
+    -- Check if this user was referred by a sales person
+    -- We look for their active membership to find the sales_id
+    SELECT sales_id INTO v_sales_id
+    FROM public.memberships
+    WHERE user_id = NEW.user_id AND status = 'active'
+    LIMIT 1;
+
+    -- If a referrer exists, calculate 7% commission
+    IF v_sales_id IS NOT NULL THEN
+        SELECT COALESCE(commission_rate, 0.07) INTO v_commission_rate
+        FROM public.sales WHERE id = v_sales_id;
+
+        -- Calculate based on subtotal (before PPN/Shipping)
+        v_commission_amount := NEW.subtotal * v_commission_rate;
+
+        INSERT INTO public.commissions (
+            sales_id, user_id, commission_type, reference_id,
+            transaction_amount, commission_rate, commission_amount, status
+        ) VALUES (
+            v_sales_id, NEW.user_id, 'order', NEW.id,
+            NEW.subtotal, v_commission_rate, v_commission_amount, 'pending'
+        );
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- D. TRIGGERS
+DROP TRIGGER IF EXISTS tr_on_membership_activated ON public.memberships;
+CREATE TRIGGER tr_on_membership_activated
+    BEFORE UPDATE ON public.memberships
+    FOR EACH ROW
+    WHEN (OLD.status IS DISTINCT FROM NEW.status)
+    EXECUTE FUNCTION public.handle_membership_activation();
+
+DROP TRIGGER IF EXISTS tr_on_order_created ON public.orders;
+CREATE TRIGGER tr_on_order_created
+    AFTER INSERT ON public.orders
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_order_commission();
+
+-- E. COMMISSION SYNC LOGIC
+-- Automatically updates total_commission and pending_commission in the sales table.
+CREATE OR REPLACE FUNCTION public.sync_sales_commission_totals()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE public.sales
+    SET 
+        total_commission = (
+            SELECT COALESCE(SUM(commission_amount), 0)
+            FROM public.commissions
+            WHERE sales_id = COALESCE(NEW.sales_id, OLD.sales_id)
+            AND status = 'paid'
+        ),
+        pending_commission = (
+            SELECT COALESCE(SUM(commission_amount), 0)
+            FROM public.commissions
+            WHERE sales_id = COALESCE(NEW.sales_id, OLD.sales_id)
+            AND status = 'pending'
+        )
+    WHERE id = COALESCE(NEW.sales_id, OLD.sales_id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS tr_sync_sales_commissions ON public.commissions;
+CREATE TRIGGER tr_sync_sales_commissions
+AFTER INSERT OR UPDATE OR DELETE ON public.commissions
+FOR EACH ROW EXECUTE FUNCTION public.sync_sales_commission_totals();
 
 -- =============================================================================
 -- END OF SCHEMA

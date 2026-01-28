@@ -1,9 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
+    const adminClient = createAdminClient()
     const formData = await request.json()
 
     const {
@@ -45,32 +47,31 @@ export async function POST(request: Request) {
       .update({
         ktp_number: nomorKTP,
         phone: noHp,
-        // We could store other info in a metadata column or add columns to profiles
+        referral_code_used: referralCode || null,
       })
       .eq('user_id', userId)
 
     if (profileError) {
       console.error('Profile update error:', profileError)
-      // Non-fatal, we can continue
     }
 
-    // 3. Create pending membership
-    // First, find sales_id if referralCode is provided
+    // 3. Create pending membership using ADMIN client to bypass RLS
     let salesId = null
     if (referralCode) {
-      const { data: salesData } = await supabase
+      // Use .ilike for case-insensitive matching
+      const { data: salesData } = await adminClient
         .from('sales')
         .select('id')
-        .eq('referral_code', referralCode)
+        .ilike('referral_code', referralCode.trim())
         .eq('is_active', true)
-        .single()
+        .maybeSingle()
       
       if (salesData) {
         salesId = salesData.id
       }
     }
 
-    const { error: membershipError } = await supabase
+    const { error: membershipError } = await adminClient
       .from('memberships')
       .insert({
         user_id: userId,

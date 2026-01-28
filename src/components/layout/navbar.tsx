@@ -129,20 +129,42 @@ export default function Navbar() {
                       <p className="font-bold text-gray-900 truncate">{user.full_name}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       <div className="mt-3 flex items-center justify-between">
-                         <span className="text-xs font-bold text-pink-600 bg-pink-50 px-2 py-1 rounded-lg">Member</span>
-                         <span className="text-xs font-bold text-gray-700">{user.points_balance?.toLocaleString()} Poin</span>
+                         <span className="text-xs font-bold text-pink-600 bg-pink-50 px-2 py-1 rounded-lg uppercase">{user.role}</span>
+                         {user.role === 'member' && (
+                           <span className="text-xs font-bold text-gray-700">{user.points_balance?.toLocaleString()} Poin</span>
+                         )}
                       </div>
                     </div>
 
+                    {/* Admin Dashboard Link */}
+                    {user.role === 'admin' && (
+                      <Link href="/dashboard/admin" onClick={() => setShowDropdown(false)} className="w-full text-left px-6 py-3 text-pink-600 hover:bg-pink-50 font-bold flex items-center gap-3 transition-colors">
+                        <LayoutDashboard size={18} /> Master Dashboard
+                      </Link>
+                    )}
+
+                    {/* Sales Dashboard Link - Only for Sales Role */}
+                    {user.role === 'sales' && (
+                      <Link href="/dashboard/sales" onClick={() => setShowDropdown(false)} className="w-full text-left px-6 py-3 text-blue-600 hover:bg-blue-50 font-bold flex items-center gap-3 transition-colors">
+                        <LayoutDashboard size={18} /> Sales Dashboard
+                      </Link>
+                    )}
+
+                    {/* Member Links */}
                     <button onClick={handleProfileClick} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
                       <User size={18} /> Profil Saya
                     </button>
-                    <button onClick={() => { router.push("/dashboard/kelas"); setShowDropdown(false); }} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
-                      <MonitorPlay size={18} /> Kelas Saya
-                    </button>
-                    <button onClick={() => { router.push("/dashboard/pesanan"); setShowDropdown(false); }} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
-                      <ShoppingCart size={18} /> Pesanan Saya
-                    </button>
+                    
+                    {user.role === 'member' && (
+                      <>
+                        <button onClick={() => { router.push("/dashboard/kelas"); setShowDropdown(false); }} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
+                          <MonitorPlay size={18} /> Kelas Saya
+                        </button>
+                        <button onClick={() => { router.push("/dashboard/pesanan"); setShowDropdown(false); }} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
+                          <ShoppingCart size={18} /> Pesanan Saya
+                        </button>
+                      </>
+                    )}
 
                     <div className="border-t border-gray-100 my-2"></div>
                     <button onClick={handleSignOut} className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50 font-bold flex items-center gap-3 transition-colors">
@@ -182,17 +204,36 @@ export default function Navbar() {
                 <div className="pt-6 mt-4 border-t border-gray-100 space-y-2">
                   <div className="px-4 mb-4">
                     <p className="font-bold text-gray-900">{user.full_name}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
+                    <p className="text-sm text-gray-500 uppercase font-bold text-pink-600">{user.role}</p>
                   </div>
+
+                  {/* Role based mobile links */}
+                  {user.role === 'admin' && (
+                    <Link href="/dashboard/admin" onClick={() => setIsMenuOpen(false)} className="w-full text-left px-4 py-3 rounded-xl bg-pink-50 text-pink-600 font-bold flex items-center gap-3">
+                      <LayoutDashboard size={20} /> Master Dashboard
+                    </Link>
+                  )}
+
+                  {user.role === 'sales' && (
+                    <Link href="/dashboard/sales" onClick={() => setIsMenuOpen(false)} className="w-full text-left px-4 py-3 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center gap-3">
+                      <LayoutDashboard size={20} /> Sales Dashboard
+                    </Link>
+                  )}
+
                   <button onClick={handleProfileClick} className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3">
                     <User size={20} /> Profil Saya
                   </button>
-                  <button onClick={() => { router.push("/dashboard/kelas"); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3">
-                    <MonitorPlay size={20} /> Kelas Saya
-                  </button>
-                  <button onClick={handleSignOut} className="w-full text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-bold flex items-center gap-3">
-                    <LogOut size={20} /> Keluar
-                  </button>
+
+                  {user.role === 'member' && (
+                    <>
+                      <button onClick={() => { router.push("/dashboard/kelas"); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3">
+                        <MonitorPlay size={20} /> Kelas Saya
+                      </button>
+                      <button onClick={() => { router.push("/dashboard/pesanan"); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3">
+                        <ShoppingCart size={20} /> Pesanan Saya
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <button onClick={handleLoginClick} className="mt-6 mx-4 bg-pink-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-100">

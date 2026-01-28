@@ -115,27 +115,53 @@ function EventCheckoutContent() {
     setRedeemPoints(Math.min(numValue, maxRedeem));
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!registrationData.fullName.trim()) return alert("Silakan isi nama lengkap");
     if (registrationData.phoneNumber.length < 10) return alert("Nomor HP tidak valid");
     if (!registrationData.idCardNumber.trim()) return alert("Silakan isi Nomor KTP");
 
-    const paymentData = {
-      type: "event",
-      event: eventData,
-      registration: registrationData,
-      address: selectedAddress,
-      eventPrice,
-      redeemPoints,
-      totalAfterRedeem,
-      ppn,
-      totalBayar,
-      timestamp: new Date().toISOString(),
-      isGuest: !isLoggedIn,
-    };
+    if (!eventData) return;
 
-    localStorage.setItem("payment_data", JSON.stringify(paymentData));
-    router.push("/payment/select");
+    setLoading(true);
+    try {
+      // 1. Create event order in database
+      const response = await fetch("/api/member/events/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId: (eventData as any).id,
+          customerName: registrationData.fullName,
+          customerPhone: registrationData.phoneNumber,
+          customerEmail: user?.email,
+          subtotal: eventPrice,
+          redeemPoints: redeemPoints,
+          totalPayment: totalBayar,
+          paymentMethod: "QRIS",
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to create event order");
+
+      // 2. Store payment data for selection page
+      const paymentData = {
+        type: "event",
+        orderNumber: result.orderNumber,
+        event: eventData,
+        registration: registrationData,
+        eventPrice,
+        redeemPoints,
+        totalBayar,
+        timestamp: new Date().toISOString(),
+      };
+
+      localStorage.setItem("payment_data", JSON.stringify(paymentData));
+      router.push("/payment/select");
+    } catch (error: any) {
+      alert("Gagal memproses pendaftaran: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading || !eventData) {
