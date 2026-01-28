@@ -2,7 +2,7 @@
 
 // types/order.ts
 export interface OrderItem {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   quantity: number;
@@ -18,7 +18,7 @@ export interface OrderNotification {
 export type OrderStatus = "sedang_diproses" | "sedang_dikirim" | "selesai";
 
 export interface Order {
-  id: number;
+  id: string | number;
   orderNumber: string;
   date: string;
   status: OrderStatus;

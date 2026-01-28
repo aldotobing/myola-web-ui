@@ -1,16 +1,14 @@
-/** @format */
-"use client";
-
-// src/app/api/pesanan/[orderNumber]/route.ts
+// src/app/api/member/orders/[orderNumber]/route.ts
 import { NextResponse } from "next/server";
 import { getOrderByNumber } from "@/lib/service/member/pesanan";
 
 export async function GET(
   request: Request,
-  { params }: { params: { orderNumber: string } }
+  { params }: { params: Promise<{ orderNumber: string }> }
 ) {
   try {
-    const order = await getOrderByNumber(params.orderNumber);
+    const { orderNumber } = await params;
+    const order = await getOrderByNumber(orderNumber);
 
     if (!order) {
       return NextResponse.json(

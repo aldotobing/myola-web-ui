@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/app/contexts/AuthContexts";
+import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function LoginPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const supabase = createClient();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -38,124 +38,29 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  //API
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (validateForm()) {
-  //     setIsLoading(true);
-
-  //     try {
-  //       // Simulate API call
-  //       // In production, replace with actual API endpoint
-  //       const response = await fetch("/api/auth/login", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(formData),
-  //       });
-
-  //       if (response.ok) {
-  //         const data = await response.json();
-
-  //         // Store user data in localStorage
-  //         localStorage.setItem(
-  //           "user",
-  //           JSON.stringify({
-  //             name: data.name || "Susi Susanti",
-  //             email: formData.email,
-  //             points: 10000,
-  //             memberUntil: "10 Januari 2026",
-  //             isLoggedIn: true,
-  //           })
-  //         );
-
-  //         // Redirect to homepage
-  //         router.push("/");
-  //       } else {
-  //         setErrors({ general: "Email atau password salah" });
-  //       }
-  //     } catch (error) {
-  //       // If API not available, use mock login for demo
-  //       console.log("Using mock login");
-
-  //       // Mock successful login
-  //       localStorage.setItem(
-  //         "user",
-  //         JSON.stringify({
-  //           name: "Susi Susanti",
-  //           email: formData.email,
-  //           points: 10000,
-  //           memberUntil: "10 Januari 2026",
-  //           avatar: "/images/avatar-default.jpg",
-  //           isLoggedIn: true,
-  //         })
-  //       );
-
-  //       setTimeout(() => {
-  //         setIsLoading(false);
-  //         router.push("/");
-  //       }, 1000);
-  //     }
-  //   }
-  // };
-  // *** Tambahkan state baru ini ***
-
-  // Data user yang valid untuk login
-  const validUsers = [
-    {
-      email: "user@myola.com",
-      password: "password123",
-      name: "Susi Susanti",
-    },
-    {
-      email: "admin@myola.com",
-      password: "admin123",
-      name: "Admin User",
-    },
-    {
-      email: "tiarahardiyanti26@gmail.com",
-      password: "password123",
-      name: "Tiara Hardiyanti",
-    },
-  ];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (validateForm()) {
       setIsLoading(true);
+      setErrors({});
 
       try {
-        // Cari user dari data valid
-        const foundUser = validUsers.find(
-          (user) =>
-            user.email === formData.email && user.password === formData.password
-        );
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
 
-        if (foundUser) {
-          // Login berhasil
-          const userData = {
-            name: foundUser.name,
-            email: formData.email,
-            points: 1000000,
-            memberUntil: "10 Januari 2026",
-            avatar: "/images/avatar-default.jpg",
-            isLoggedIn: true,
-          };
-
-          login(userData);
-
-          // Delay sebentar untuk UX yang lebih baik
-          setTimeout(() => {
-            setIsLoading(false);
-            router.push("/");
-          }, 1000);
-        } else {
-          // Login gagal
-          setErrors({ general: "Email atau password salah" });
+        if (error) {
+          setErrors({ general: error.message });
           setIsLoading(false);
+          return;
+        }
+
+        if (data.user) {
+          // Success! onAuthStateChange in AuthContext will handle the profile fetching and state update
+          router.push("/");
+          router.refresh(); // Refresh to update server-side state if needed
         }
       } catch (error) {
         setErrors({ general: "Terjadi kesalahan. Silakan coba lagi." });
@@ -172,8 +77,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screenflex items-center justify-center py-12 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-gray-50">
+      <div className="max-w-2xl w-full mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -189,8 +94,8 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Form */}
-        <div className=" p-8">
+        {/* Form Container */}
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* General Error */}
             {errors.general && (
@@ -210,7 +115,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                placeholder="Nama Lengkap"
+                placeholder="Email Anda"
                 className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
                   errors.email
                     ? "border-red-500"
@@ -227,33 +132,33 @@ export default function LoginPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                placeholder="Password"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                  errors.password
-                    ? "border-red-500"
-                    : "border-gray-300 focus:border-pink-500"
-                }`}
-              />
-              {/* Tombol Icon untuk Toggle Visibility */}
-              <button
-                type="button" // Penting: type="button" agar tidak memicu submit form
-                onClick={togglePasswordVisibility}
-                className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-500 hover:text-pink-500 transition-colors"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {/* Tampilkan ikon mata yang sesuai dengan status */}
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
-              </button>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  placeholder="Password"
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                    errors.password
+                      ? "border-red-500"
+                      : "border-gray-300 focus:border-pink-500"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-pink-500 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1">{errors.password}</p>
               )}
@@ -272,7 +177,7 @@ export default function LoginPage() {
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  <span>Loading...</span>
+                  <span>Logging in...</span>
                 </div>
               ) : (
                 "Login"

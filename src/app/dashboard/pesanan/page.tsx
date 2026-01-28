@@ -23,10 +23,10 @@ import OrderCard from "@/components/orders/OrderCard";
 import { Order, OrderStatus } from "@/types/order";
 import { ChevronDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-const { getAllOrders } = await import("@/lib/service/member/pesanan");
+import { getAllOrders } from "@/lib/service/member/pesanan";
 
 export default function PesananPage() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -62,8 +62,8 @@ export default function PesananPage() {
 
   //Menu Handlers
 
-  const handleLogout = () => {
-    logout();
+  const handlesignOut = async () => {
+    await signOut();
     router.push("/");
   };
 
@@ -72,7 +72,7 @@ export default function PesananPage() {
     setShowMobileMenu(false);
   };
 
-  if (!user?.isLoggedIn) {
+  if (!user) {
     return null;
   }
 
@@ -148,7 +148,7 @@ export default function PesananPage() {
             <Wallet className="w-5 h-5 text-pink-600" />
             <div>
               <p className="text-xs text-gray-600">Poin </p>
-              <p className="font-bold text-gray-900">10.000</p>
+              <p className="font-bold text-gray-900">{user.points_balance?.toLocaleString() || "0"}</p>
             </div>
           </div>
 
@@ -177,14 +177,14 @@ export default function PesananPage() {
               {/* User Info */}
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-pink-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.full_name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-gray-900 truncate">
-                    {user.name}
+                    {user.full_name}
                   </h3>
                   <span className="inline-block bg-pink-500 text-white text-xs px-3 py-1 rounded-full mt-1">
-                    {user.points?.toLocaleString() || "10,000"} poin
+                    {user.points_balance?.toLocaleString() || "0"} poin
                   </span>
                 </div>
               </div>

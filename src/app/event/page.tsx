@@ -3,44 +3,26 @@
 // app/event/page.tsx
 "use client";
 
-import { useState } from "react";
-import { Search } from "lucide-react";
-import { ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, ChevronDown, Loader2 } from "lucide-react";
 import EventCard, { EventCardProps } from "@/components/layout/eventcard";
+import { getAllEvents, EventData } from "@/lib/service/member/event-catalog";
 
 export default function EventPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [events, setEvents] = useState<EventData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const events: EventCardProps[] = [
-    {
-      id: "1",
-      title: "Precision Cutting for Modern Styles",
-      image: "/images/kelas_1.png",
-      date: "20 October 2025",
-      time: "16.00 WIB",
-      category: "MASTERCLASS",
-      slug: "precision-cutting-modern-styles-1",
-    },
-    {
-      id: "2",
-      title: "Precision Cutting for Modern Styles",
-      image: "/images/kelas_2.png",
-      date: "20 October 2025",
-      time: "16.00 WIB",
-      category: "MASTERCLASS",
-      slug: "precision-cutting-modern-styles-2",
-    },
-    {
-      id: "3",
-      title: "Precision Cutting for Modern Styles",
-      image: "/images/kelas_3.png",
-      date: "20 October 2025",
-      time: "16.00 WIB",
-      category: "MASTERCLASS",
-      slug: "precision-cutting-modern-styles-3",
-    },
-  ];
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      const data = await getAllEvents();
+      setEvents(data as any);
+      setIsLoading(false);
+    };
+    fetchEvents();
+  }, []);
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title
@@ -52,12 +34,12 @@ export default function EventPage() {
   });
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
       <section className="bg-white py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            Event
+            Event <span className="text-pink-500">MyOLA</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto">
             Temukan berbagai{" "}
@@ -71,7 +53,7 @@ export default function EventPage() {
       </section>
 
       {/* Filter & Search Section */}
-      <section className="py-8 px-4 bg-white border-b">
+      <section className="py-8 px-4 bg-white sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Filter Dropdown */}
@@ -79,31 +61,25 @@ export default function EventPage() {
               <select
                 value={selectedFilter}
                 onChange={(e) => setSelectedFilter(e.target.value)}
-                className="w-full md:w-48 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 font-medium bg-white focus:outline-none cursor-pointer appearance-none"
+                className="w-full md:w-48 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 font-medium bg-gray-50 focus:outline-none focus:border-pink-500 cursor-pointer appearance-none"
               >
-                <option value="all">Semua </option>
-                <option value="Beginner">Tersedia</option>
-                <option value="Intermediate">Habis</option>
+                <option value="all">Semua Kategori</option>
+                <option value="MASTERCLASS">Masterclass</option>
+                <option value="WORKSHOP">Workshop</option>
               </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             </div>
 
             {/* Search Bar */}
-
-            <div className="flex items-center gap-3 w-full md:w-96">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder="Cari Event"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full py-2 border-b border-gray-400 focus:outline-none text-gray-600 placeholder-gray-400"
-                />
-              </div>
-
-              <button className="text-gray-600 hover:text-gray-800 transition">
-                <Search className="w-6 h-6" />
-              </button>
+            <div className="relative w-full md:w-96">
+              <input
+                type="text"
+                placeholder="Cari event seru..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 text-gray-700 transition-all"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
           </div>
         </div>
@@ -112,18 +88,23 @@ export default function EventPage() {
       {/* Events Grid */}
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
-          {filteredEvents.length > 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <Loader2 className="w-12 h-12 text-pink-500 animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Memuat event...</p>
+            </div>
+          ) : filteredEvents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map((event) => (
-                <EventCard key={event.id} {...event} />
+                <EventCard key={event.id} {...(event as any)} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <p className="text-3xl text-gray-900 font-semibold mb-6">
+            <div className="text-center py-24 bg-white rounded-2xl border-2 border-dashed border-gray-100">
+              <p className="text-2xl text-gray-900 font-bold mb-2">
                 Tidak ada event yang ditemukan
               </p>
-              <p className="text-xl text-gray-500">
+              <p className="text-gray-500">
                 Silakan cek kembali kata kunci atau pilih kategori lain
               </p>
             </div>

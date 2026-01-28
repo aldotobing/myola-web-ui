@@ -28,7 +28,7 @@ import { completeVideo, getCourseById, getCurrentVideo } from "@/lib/service/mem
 import { Play } from "next/font/google";
 
 export default function KelasDetailPage() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -136,8 +136,8 @@ export default function KelasDetailPage() {
 
   //MENU HANDLER
 
-  const handleLogout = () => {
-    logout();
+  const handlesignOut = () => {
+    signOut();
     router.push("/");
   };
 
@@ -146,7 +146,7 @@ export default function KelasDetailPage() {
     setShowMobileMenu(false);
   };
 
-  if (!user?.isLoggedIn) {
+  if (!!!user) {
     return null;
   }
 

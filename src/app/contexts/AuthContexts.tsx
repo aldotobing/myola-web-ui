@@ -4,55 +4,129 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
-interface User {
-  name: string;
+interface Profile {
+  full_name: string;
+  role: 'member' | 'sales' | 'admin';
+  points_balance: number;
+  avatar_url?: string;
+  ktp_number?: string;
+  ktp_image_url?: string;
+  phone?: string;
+  memberUntil?: string | null;
+}
+
+interface User extends Profile {
+  id: string;
   email: string;
-  points: number;
-  memberUntil: string;
-  avatar?: string;
-  isLoggedIn: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (userData: User) => void;
-  logout: () => void;
+  supabaseUser: SupabaseUser | null;
   isLoading: boolean;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse stored user:", error);
-        localStorage.removeItem("user");
+  const fetchProfile = async (sUser: SupabaseUser) => {
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", sUser.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        return;
       }
-    }
-    setIsLoading(false);
-  }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+      // Also fetch membership
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("expires_at, status")
+        .eq("user_id", sUser.id)
+        .eq("status", "active")
+        .order("activated_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (profile) {
+        setUser({
+          id: sUser.id,
+          email: sUser.email!,
+          full_name: profile.full_name,
+          role: profile.role,
+          points_balance: profile.points_balance,
+          avatar_url: profile.avatar_url,
+          ktp_number: profile.ktp_number,
+          ktp_image_url: profile.ktp_image_url,
+          phone: profile.phone,
+          memberUntil: membership?.expires_at || null,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+    }
   };
 
-  const logout = () => {
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        setSupabaseUser(session.user);
+        await fetchProfile(session.user);
+      }
+      
+      setIsLoading(false);
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          if (session?.user) {
+            setSupabaseUser(session.user);
+            await fetchProfile(session.user);
+          } else {
+            setSupabaseUser(null);
+            setUser(null);
+          }
+          setIsLoading(false);
+        }
+      );
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+
+    initializeAuth();
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("user");
+    setSupabaseUser(null);
+  };
+
+  const refreshProfile = async () => {
+    if (supabaseUser) {
+      await fetchProfile(supabaseUser);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, supabaseUser, isLoading, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
@@ -68,6 +142,5 @@ export function useAuth() {
 
 export const isMemberActive = (memberUntil?: string | null) => {
   if (!memberUntil) return false;
-
   return new Date(memberUntil).getTime() > Date.now();
 };

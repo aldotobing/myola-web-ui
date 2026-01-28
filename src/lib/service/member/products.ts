@@ -1,0 +1,131 @@
+/** @format */
+
+import { createClient as getSupabase } from "@/utils/supabase/client";
+
+export interface ProductData {
+  slug: string;
+  id: string;
+  name: string;
+  price: string;
+  rating: number;
+  image: string;
+  cashback: number;
+  inStock: boolean;
+}
+
+export interface ReviewData {
+  id: string;
+  productId: string;
+  userName: string;
+  userAvatar: string;
+  rating: number;
+  date: string;
+  title: string;
+  comment: string;
+}
+
+export interface ProductDetailData {
+  slug: string;
+  id: string;
+  name: string;
+  price: string;
+  rating: number;
+  image: string;
+  images: string[];
+  cashback: number;
+  inStock: boolean;
+  category: string;
+  colorLabel?: string;
+  description: string;
+  reviews: ReviewData[];
+}
+
+/**
+ * Get all products from Supabase
+ */
+export async function getAllProducts(): Promise<ProductData[]> {
+  const supabase = getSupabase();
+  
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      product_categories(name),
+      product_images(*)
+    `)
+    .eq("is_active", true);
+
+  if (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
+
+  return data.map((p: any) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    price: `Rp ${Number(p.price).toLocaleString('id-ID')}`,
+    rating: Number(p.rating || 0),
+    image: p.product_images?.find((img: any) => img.is_primary)?.image_url || "/images/product_1.png",
+    cashback: p.cashback_points || 0,
+    inStock: p.stock > 0,
+  }));
+}
+
+/**
+ * Get product detail by slug
+ */
+export async function getProductDetailBySlug(
+  slug: string
+): Promise<ProductDetailData | null> {
+  const supabase = getSupabase();
+
+  const { data: product, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      product_categories(name),
+      product_images(*),
+      product_reviews(
+        *,
+        profiles(full_name, avatar_url)
+      )
+    `)
+    .eq("slug", slug)
+    .single();
+
+  if (error || !product) {
+    console.error("Error fetching product detail:", error);
+    return null;
+  }
+
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    price: `Rp ${Number(product.price).toLocaleString('id-ID')}`,
+    rating: Number(product.rating || 0),
+    image: product.product_images?.find((img: any) => img.is_primary)?.image_url || "/images/product_1.png",
+    images: product.product_images?.map((img: any) => img.image_url) || [],
+    cashback: product.cashback_points || 0,
+    inStock: product.stock > 0,
+    category: product.product_categories?.name || "General",
+    colorLabel: product.color_label,
+    description: product.description || "",
+    reviews: product.product_reviews?.map((r: any) => ({
+      id: r.id,
+      productId: r.product_id,
+      userName: r.profiles?.full_name || "Anonymous",
+      userAvatar: r.profiles?.avatar_url || "/images/avatar-default.jpg",
+      rating: r.rating,
+      date: new Date(r.created_at).toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+      title: r.title || "",
+      comment: r.comment || "",
+    })) || [],
+  };
+}

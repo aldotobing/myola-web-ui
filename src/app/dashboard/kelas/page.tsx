@@ -25,7 +25,7 @@ import CourseCard from "@/components/kelas/KelasCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function KelasPage() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -52,8 +52,8 @@ export default function KelasPage() {
 
   //MENU HANDLER
 
-  const handleLogout = () => {
-    logout();
+  const handlesignOut = async () => {
+    await signOut();
     router.push("/");
   };
 
@@ -62,7 +62,7 @@ export default function KelasPage() {
     setShowMobileMenu(false);
   };
 
-  if (!user?.isLoggedIn) {
+  if (!user) {
     return null;
   }
 
@@ -171,14 +171,14 @@ export default function KelasPage() {
               {/* User Info */}
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-pink-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.full_name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-gray-900 truncate">
-                    {user.name}
+                    {user.full_name}
                   </h3>
                   <span className="inline-block bg-pink-500 text-white text-xs px-3 py-1 rounded-full mt-1">
-                    {user.points?.toLocaleString() || "10,000"} poin
+                    {user.points_balance?.toLocaleString() || "10,000"} poin
                   </span>
                 </div>
               </div>

@@ -20,7 +20,7 @@ export default function CheckoutPage() {
   const { user } = useAuth();
 
   // User status checks
-  const isLoggedIn = user?.isLoggedIn || false;
+  const isLoggedIn = !!user || false;
   const isMember = isLoggedIn && isMemberActive(user?.memberUntil);
 
   // Feature eligibility based on user status
@@ -114,7 +114,7 @@ export default function CheckoutPage() {
     if (!canRedeemPoints) return;
 
     const numValue = parseInt(value) || 0;
-    const userPoints = user?.points || 0;
+    const userPoints = user?.points_balance || 0;
     const maxRedeem = Math.min(userPoints, subtotal);
     setRedeemPoints(Math.min(numValue, maxRedeem));
   };
@@ -171,7 +171,7 @@ export default function CheckoutPage() {
     );
   }
 
-  // if (!user?.isLoggedIn) {
+  // if (!!!user) {
   //   return null; // redirect sudah di-handle useEffect
   // }
 
@@ -320,7 +320,7 @@ export default function CheckoutPage() {
                       <div className="flex-1">
                         <p className="font-bold text-gray-900 mb-1">
                           Kamu punya{" "}
-                          {(user?.points || 0).toLocaleString("id-ID")} Poin
+                          {(user?.points_balance || 0).toLocaleString("id-ID")} Poin
                           MOLA
                         </p>
                         <p className="text-sm text-gray-600 mb-3">

@@ -3,26 +3,81 @@
 // app/payment/success/page.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, Home, Book } from "lucide-react";
+import { CheckCircle, Home, Book, Loader2 } from "lucide-react";
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
+  const [isFinalizing, setIsFinalizing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const finalize = async () => {
+      const paymentDataStr = localStorage.getItem("payment_data");
+      if (!paymentDataStr) {
+        setIsFinalizing(false);
+        return;
+      }
+
+      try {
+        const paymentData = JSON.parse(paymentDataStr);
+        
+        if (paymentData.type === "member") {
+          const response = await fetch("/api/member/membership/finalize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: paymentData.userId,
+              paymentReference: "PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+              paymentMethod: "Selected Method", // Should get from actual payment flow
+            }),
+          });
+
+          if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.error || "Failed to finalize membership");
+          }
+        }
+        
+        // Clear payment data after successful finalization
+        localStorage.removeItem("payment_data");
+        localStorage.removeItem("memberRegistrationData");
+      } catch (err: any) {
+        console.error("Finalization error:", err);
+        setError(err.message);
+      } finally {
+        setIsFinalizing(false);
+      }
+    };
+
+    finalize();
+  }, []);
 
   const handleGoHome = () => {
-    localStorage.removeItem("memberRegistrationData");
     router.push("/");
   };
 
   const handleExploreClasses = () => {
-    router.push("/akademi");
+    router.push("/dashboard/kelas");
   };
+
+  if (isFinalizing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-pink-500 animate-spin mx-auto mb-4" />
+          <p className="text-xl font-semibold">Mengaktifkan Keanggotaan Anda...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 py-12 px-4 flex items-center justify-center">
       <div className="max-w-2xl w-full">
         {/* Success Icon */}
-        <div className="text-center mb-8 animate-fade-in">
+        <div className="text-center mb-8">
           <div className="inline-block p-6 bg-white rounded-full shadow-2xl mb-6">
             <CheckCircle className="w-24 h-24 text-green-500" />
           </div>
@@ -37,11 +92,18 @@ export default function PaymentSuccessPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+            <p className="text-red-700">Terjadi kendala saat aktivasi otomatis: {error}</p>
+            <p className="text-red-600 text-sm">Silakan hubungi customer service kami.</p>
+          </div>
+        )}
+
         {/* Info Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6 animate-slide-up">
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="text-center mb-6">
             <div className="inline-block bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-full font-bold text-lg mb-4">
-              Member Active
+              Member Aktif
             </div>
             <p className="text-gray-700 leading-relaxed">
               Akun Anda telah diaktifkan dan siap digunakan. Sekarang Anda dapat
@@ -80,7 +142,7 @@ export default function PaymentSuccessPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-4 animate-slide-up animation-delay-200">
+        <div className="space-y-4">
           <button
             onClick={handleExploreClasses}
             className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold text-lg py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
@@ -109,44 +171,6 @@ export default function PaymentSuccessPage() {
           </a>
         </p>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.6s ease-out;
-        }
-
-        .animation-delay-200 {
-          animation-delay: 0.2s;
-          opacity: 0;
-          animation-fill-mode: forwards;
-        }
-      `}</style>
     </div>
   );
 }
