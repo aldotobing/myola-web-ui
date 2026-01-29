@@ -6,6 +6,7 @@ import { Montserrat, Libre_Baskerville } from "next/font/google";
 import Footer from "@/components/layout/footer";
 import { AuthProvider } from "./contexts/AuthContexts";
 import { CartProvider } from "./contexts/CartContexts";
+import { Analytics } from "@vercel/analytics/next";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -43,6 +44,7 @@ export default function RootLayout({
 
         {/* Footer */}
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
