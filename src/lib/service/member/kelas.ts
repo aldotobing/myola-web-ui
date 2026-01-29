@@ -183,3 +183,31 @@ export async function completeVideo(
     return { success: false, error: error.message };
   }
 }
+
+export async function getCoursesByStatus(
+  status: "in_progress" | "completed",
+  userId?: string
+): Promise<Course[]> {
+  const allCourses = await getUserCourses(userId);
+  return allCourses.filter((course) => course.status === status);
+}
+
+export async function getNextVideo(
+  courseId: string,
+  userId?: string
+): Promise<Video | null> {
+  const course = await getCourseById(courseId, userId);
+  if (!course) return null;
+  return course.videos.find((video) => !video.completed) || null;
+}
+
+export async function getCurrentVideo(
+  courseId: string,
+  userId?: string
+): Promise<Video | null> {
+  const course = await getCourseById(courseId, userId);
+  if (!course) return null;
+  
+  // Try to find the first uncompleted video, or return the last video if all completed
+  return course.videos.find((v) => !v.completed) || course.videos[course.videos.length - 1] || null;
+}
