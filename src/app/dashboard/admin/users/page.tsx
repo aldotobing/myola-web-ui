@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { adminGetMembers, adminGetSales, adminUpdateMemberPoints } from "@/lib/service/admin/admin-service";
 import Link from "next/link";
+import NextImage from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminUsersPage() {
@@ -49,6 +50,11 @@ export default function AdminUsersPage() {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // KTP Modal State
+  const [isKtpModalOpen, setIsKtpModalOpen] = useState(false);
+  const [ktpUrl, setKtpUrl] = useState("");
+  const [isLoadingKtp, setIsLoadingKtp] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -99,16 +105,23 @@ export default function AdminUsersPage() {
       return;
     }
 
+    setIsLoadingKtp(true);
+    setSelectedUser(member);
+    setIsKtpModalOpen(true);
+    
     try {
       const response = await fetch("/api/member/upload-ktp?path=" + encodeURIComponent(member.ktp_image_url));
       const data = await response.json();
       if (data.url) {
-        window.open(data.url, '_blank');
+        setKtpUrl(data.url);
       } else {
         throw new Error("Gagal mengambil data KTP");
       }
     } catch (error) {
       alert("Gagal memuat KTP");
+      setIsKtpModalOpen(false);
+    } finally {
+      setIsLoadingKtp(false);
     }
   };
 
@@ -439,6 +452,68 @@ export default function AdminUsersPage() {
                 {isUpdatingStatus && <Loader2 className="animate-spin" size={18} />} Perbarui Status
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* KTP View Modal */}
+      {isKtpModalOpen && (
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[40px] max-w-2xl w-full shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="flex justify-between items-center p-8 border-b">
+              <div>
+                <h3 className="text-2xl font-black text-gray-900 leading-tight">Dokumen KTP</h3>
+                <p className="text-gray-500 text-sm font-medium">{selectedUser?.full_name}</p>
+              </div>
+              <button 
+                onClick={() => { setIsKtpModalOpen(false); setKtpUrl(""); }}
+                className="p-3 hover:bg-gray-100 rounded-full transition-all group"
+              >
+                <X className="text-gray-400 group-hover:text-gray-900" size={24} />
+              </button>
+            </div>
+            
+            <div className="p-8 bg-gray-50 flex items-center justify-center min-h-[400px]">
+              {isLoadingKtp ? (
+                <div className="text-center">
+                  <Loader2 className="w-12 h-12 text-pink-500 animate-spin mx-auto mb-4" />
+                  <p className="text-gray-500 font-bold text-sm">Mengambil dokumen aman...</p>
+                </div>
+              ) : ktpUrl ? (
+                <div className="relative w-full aspect-[1.58/1] rounded-2xl overflow-hidden shadow-lg border-4 border-white">
+                  <NextImage 
+                    src={ktpUrl} 
+                    alt="KTP Member" 
+                    fill 
+                    className="object-contain"
+                    unoptimized // Signed URLs usually better unoptimized to avoid proxy errors
+                  />
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-red-500 font-bold">Gagal memuat dokumen.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-8 bg-white border-t flex gap-4">
+              <button 
+                onClick={() => { setIsKtpModalOpen(false); setKtpUrl(""); }}
+                className="flex-1 py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-black transition-all"
+              >
+                Tutup Review
+              </button>
+              {ktpUrl && (
+                <a 
+                  href={ktpUrl} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="px-6 py-4 bg-pink-50 text-pink-600 font-bold rounded-2xl hover:bg-pink-100 transition-all flex items-center justify-center"
+                >
+                  <ExternalLink size={20} />
+                </a>
+              )}
+            </div>
           </div>
         </div>
       )}
