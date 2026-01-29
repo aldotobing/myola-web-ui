@@ -25,6 +25,7 @@ import { adminGetProducts, adminUpdateProduct, adminGetCategories } from "@/lib/
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
 export default function AdminProductsPage() {
   const { user } = useAuth();
@@ -81,7 +82,7 @@ export default function AdminProductsPage() {
       await adminUpdateProduct(id, { is_active: !currentStatus });
       setProducts(prev => prev.map(p => p.id === id ? { ...p, is_active: !currentStatus } : p));
     } catch (error: any) {
-      alert("Gagal update status: " + error.message);
+      toast.error("Gagal update status: " + error.message);
     } finally {
       setUpdatingId(null);
     }
@@ -98,9 +99,9 @@ export default function AdminProductsPage() {
       if (!response.ok) throw new Error("Gagal menghapus produk");
       
       setProducts(prev => prev.filter(p => p.id !== id));
-      alert("Produk berhasil dihapus");
+      toast.success("Produk berhasil dihapus");
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setUpdatingId(null);
     }
@@ -175,12 +176,12 @@ export default function AdminProductsPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || `Gagal ${modalMode === 'create' ? 'membuat' : 'mengupdate'} produk`);
 
-      alert(`Produk berhasil ${modalMode === 'create' ? 'ditambahkan' : 'diperbarui'}!`);
+      toast.success(`Produk berhasil ${modalMode === 'create' ? 'ditambahkan' : 'diperbarui'}!`);
       setIsModalOpen(false);
       resetForm();
       fetchData();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }

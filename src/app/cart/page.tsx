@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useCart } from "@/app/contexts/CartContexts";
 import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function CartPage() {
   const router = useRouter();
@@ -60,7 +61,7 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (selectedItems.length === 0) {
-      alert("Pilih minimal 1 item untuk checkout");
+      toast.error("Pilih minimal 1 item untuk checkout");
       return;
     }
 

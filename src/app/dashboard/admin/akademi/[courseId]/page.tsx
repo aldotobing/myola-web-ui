@@ -16,11 +16,13 @@ import {
   PlayCircle,
   GripVertical,
   Upload,
-  Edit3
+  Edit3,
+  CheckCircle2
 } from "lucide-react";
 import { adminGetCourseById, adminGetLessons } from "@/lib/service/admin/admin-service";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function AdminCurriculumPage() {
   const { user } = useAuth();
@@ -111,11 +113,11 @@ export default function AdminCurriculumPage() {
 
       if (!response.ok) throw new Error("Gagal menyimpan materi");
       
-      alert(`Materi berhasil ${modalMode === 'create' ? 'ditambahkan' : 'diperbarui'}!`);
+      toast.success(`Materi berhasil ${modalMode === 'create' ? 'ditambahkan' : 'diperbarui'}!`);
       setIsModalOpen(false);
       fetchData();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -126,8 +128,9 @@ export default function AdminCurriculumPage() {
     try {
       await fetch(`/api/admin/akademi/lessons?id=${id}`, { method: "DELETE" });
       setLessons(prev => prev.filter(l => l.id !== id));
+      toast.success("Materi berhasil dihapus");
     } catch (error) {
-      alert("Gagal menghapus");
+      toast.error("Gagal menghapus");
     }
   };
 

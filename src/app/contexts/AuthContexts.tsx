@@ -3,7 +3,7 @@
 // app/contexts/AuthContext.tsx
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
-  const fetchProfile = async (sUser: SupabaseUser) => {
+  const fetchProfile = useCallback(async (sUser: SupabaseUser) => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -78,18 +78,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     }
-  };
+  }, [supabase]);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        await fetchProfile(session.user);
+    // 1. Loading Watchdog - Force stop loading after 10s if stuck
+    const watchdog = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Auth initialization timed out. Forcing finish.");
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
+    }, 10000);
+
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          await fetchProfile(session.user);
+        }
+      } catch (err) {
+        console.error("Auth init error:", err);
+      } finally {
+        setIsLoading(false);
+        clearTimeout(watchdog);
+      }
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
@@ -109,8 +122,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     };
 
+    // 2. Window Focus Listener - Re-verify session when user returns to tab
+    const handleFocus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Refresh profile data silently in background to keep points/status in sync
+        fetchProfile(session.user);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
     initializeAuth();
-  }, []);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearTimeout(watchdog);
+    };
+  }, [supabase, fetchProfile]);
 
   const signOut = async () => {
     try {

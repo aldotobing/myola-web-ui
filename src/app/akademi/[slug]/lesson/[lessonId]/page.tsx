@@ -20,6 +20,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getLessonDetailBySlug } from "@/lib/service/member/courses";
 import { isMemberActive, useAuth } from "@/app/contexts/AuthContexts";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function LessonDetailPage() {
   const params = useParams();
@@ -84,10 +85,10 @@ export default function LessonDetailPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to enroll");
 
-      alert("Kursus berhasil ditambahkan ke dashboard Anda!");
+      toast.success("Kursus berhasil ditambahkan ke dashboard Anda!");
       router.push("/dashboard/kelas");
     } catch (error: any) {
-      alert("Gagal mengambil kursus: " + error.message);
+      toast.error("Gagal mengambil kursus: " + error.message);
       setIsEnrolling(false);
     }
   };

@@ -28,6 +28,7 @@ import { adminGetMembers, adminGetSales, adminUpdateMemberPoints } from "@/lib/s
 import Link from "next/link";
 import NextImage from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
@@ -90,10 +91,10 @@ export default function AdminUsersPage() {
 
       if (!response.ok) throw new Error("Gagal approve member");
 
-      alert("Member berhasil diaktifkan!");
+      toast.success("Member berhasil diaktifkan!");
       await fetchData();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setApprovingId(null);
     }
@@ -101,7 +102,7 @@ export default function AdminUsersPage() {
 
   const handleViewKtp = async (member: any) => {
     if (!member.ktp_image_url) {
-      alert("Member belum upload KTP");
+      toast.error("Member belum upload KTP");
       return;
     }
 
@@ -118,7 +119,7 @@ export default function AdminUsersPage() {
         throw new Error("Gagal mengambil data KTP");
       }
     } catch (error) {
-      alert("Gagal memuat KTP");
+      toast.error("Gagal memuat KTP");
       setIsKtpModalOpen(false);
     } finally {
       setIsLoadingKtp(false);
@@ -145,11 +146,11 @@ export default function AdminUsersPage() {
     setIsUpdatingPoints(true);
     try {
       await adminUpdateMemberPoints(selectedUser.user_id, parseInt(newPoints), pointReason);
-      alert("Poin berhasil diperbarui!");
+      toast.success("Poin berhasil diperbarui!");
       setIsPointsModalOpen(false);
       fetchData();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsUpdatingPoints(false);
     }
@@ -169,11 +170,11 @@ export default function AdminUsersPage() {
 
       if (!response.ok) throw new Error("Gagal update status");
 
-      alert("Status berhasil diperbarui!");
+      toast.success("Status berhasil diperbarui!");
       setIsStatusModalOpen(false);
       fetchData();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsUpdatingStatus(false);
     }

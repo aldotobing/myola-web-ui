@@ -26,6 +26,7 @@ import {
 import { adminGetCourses, adminUpdateCourse } from "@/lib/service/admin/admin-service";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function AdminAkademiPage() {
   const { user } = useAuth();
@@ -93,10 +94,10 @@ export default function AdminAkademiPage() {
     try {
       const response = await fetch(`/api/admin/akademi?id=${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Gagal menghapus kursus");
-      alert("Kursus berhasil dihapus");
+      toast.success("Kursus berhasil dihapus");
       fetchCourses();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setUpdatingId(null);
     }
@@ -129,11 +130,11 @@ export default function AdminAkademiPage() {
 
       if (!response.ok) throw new Error("Gagal menyimpan kursus");
 
-      alert(`Kursus berhasil ${modalMode === 'create' ? 'dibuat' : 'diupdate'}!`);
+      toast.success(`Kursus berhasil ${modalMode === 'create' ? 'dibuat' : 'diupdate'}!`);
       setIsModalOpen(false);
       fetchCourses();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }

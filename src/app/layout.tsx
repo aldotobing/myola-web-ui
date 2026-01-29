@@ -1,28 +1,25 @@
-/** @format */
-import Navbar from "@/components/layout/navbar";
-import "./globals.css";
 import type { Metadata } from "next";
-import { Montserrat, Libre_Baskerville } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { AuthProvider } from "./contexts/AuthContexts";
 import { CartProvider } from "./contexts/CartContexts";
-import { Analytics } from "@vercel/analytics/next";
+import ToastProvider from "@/components/providers/ToastProvider";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"], // opsional: pilih weight yang dibutuhkan
 });
 
-const libreBaskerville = Libre_Baskerville({
-  variable: "--font-libre-baskerville",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["400", "700"], // Libre Baskerville hanya punya 400 dan 700
 });
 
 export const metadata: Metadata = {
-  title: "MYOLA",
-  description: "Monetti Academy Online",
+  title: "MyOLA - Professional Hair Academy & Store",
+  description: "Learn hair techniques and shop professional hair products.",
 };
 
 export default function RootLayout({
@@ -33,18 +30,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${montserrat.variable} ${libreBaskerville.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
           <CartProvider>
+            <ToastProvider />
             <Navbar />
-            <main>{children}</main>
+            <main className="min-h-screen">
+              {children}
+            </main>
+            <Footer />
           </CartProvider>
         </AuthProvider>
-
-        {/* Footer */}
-        <Footer />
-        <Analytics />
       </body>
     </html>
   );

@@ -21,6 +21,7 @@ import {
 import { adminGetAllOrders, adminUpdateOrderStatus } from "@/lib/service/admin/admin-service";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function AdminOrdersPage() {
   const { user } = useAuth();
@@ -55,9 +56,9 @@ export default function AdminOrdersPage() {
     try {
       await adminUpdateOrderStatus(orderId, status);
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-      alert("Status pesanan berhasil diperbarui!");
+      toast.success("Status pesanan berhasil diperbarui!");
     } catch (error: any) {
-      alert("Gagal update status: " + error.message);
+      toast.error("Gagal update status: " + error.message);
     } finally {
       setUpdatingId(null);
     }

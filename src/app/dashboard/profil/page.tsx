@@ -26,6 +26,7 @@ import {
 import Image from "next/image";
 import { getMembership, updateProfile } from "@/lib/service/member/membership";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
   const { user, signOut, refreshProfile } = useAuth();
@@ -90,7 +91,7 @@ export default function ProfilePage() {
     if (!file || !user) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("File harus berupa gambar");
+      toast.error("File harus berupa gambar");
       return;
     }
 
@@ -149,10 +150,10 @@ export default function ProfilePage() {
       });
 
       await refreshProfile();
-      alert("Profil berhasil diperbarui!");
+      toast.success("Profil berhasil diperbarui!");
     } catch (error: any) {
       console.error("Update error:", error);
-      alert("Gagal memperbarui profil: " + error.message);
+      toast.error("Gagal memperbarui profil: " + error.message);
     } finally {
       setIsSaving(false);
     }

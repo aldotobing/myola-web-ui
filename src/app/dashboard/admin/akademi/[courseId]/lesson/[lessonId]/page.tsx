@@ -23,6 +23,7 @@ import {
 import { adminGetVideoModules, adminDeleteVideoModule } from "@/lib/service/admin/admin-service";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function AdminVideoModulesPage() {
   const { user } = useAuth();
@@ -115,11 +116,11 @@ export default function AdminVideoModulesPage() {
 
       if (!response.ok) throw new Error("Gagal menyimpan video");
       
-      alert(`Video berhasil ${modalMode === 'create' ? 'ditambahkan' : 'diperbarui'}!`);
+      toast.success(`Video berhasil ${modalMode === 'create' ? 'ditambahkan' : 'diperbarui'}!`);
       setIsModalOpen(false);
       fetchVideos();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -130,8 +131,9 @@ export default function AdminVideoModulesPage() {
     try {
       await fetch(`/api/admin/akademi/video-modules?id=${id}`, { method: "DELETE" });
       setVideos(prev => prev.filter(v => v.id !== id));
+      toast.success("Video berhasil dihapus");
     } catch (error) {
-      alert("Gagal menghapus");
+      toast.error("Gagal menghapus");
     }
   };
 
