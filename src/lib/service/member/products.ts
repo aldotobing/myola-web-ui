@@ -129,3 +129,32 @@ export async function getProductDetailBySlug(
     })) || [],
   };
 }
+
+/**
+ * Submit a product review
+ */
+export async function submitProductReview(review: {
+  productId: string;
+  rating: number;
+  title: string;
+  comment: string;
+}) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data, error } = await supabase
+    .from("product_reviews")
+    .insert({
+      product_id: review.productId,
+      user_id: user.id,
+      rating: review.rating,
+      title: review.title,
+      comment: review.comment,
+      is_approved: true // Auto-approve for now, or set to false for moderation
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
