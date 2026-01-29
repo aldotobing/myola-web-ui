@@ -1,6 +1,9 @@
 /** @format */
 
-import { createClient as getSupabase } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
+
+// Create a single instance for the client-side service
+const supabase = createClient();
 
 export interface CourseData {
   title: string;
@@ -18,8 +21,6 @@ export interface CourseData {
  * Get all courses from Supabase
  */
 export async function getAllCourses(): Promise<CourseData[]> {
-  const supabase = getSupabase();
-  
   const { data, error } = await supabase
     .from("courses")
     .select("*")
@@ -27,6 +28,7 @@ export async function getAllCourses(): Promise<CourseData[]> {
     .order("sort_order", { ascending: true });
 
   if (error) {
+    if (error.message?.includes('AbortError')) return [];
     console.error("Error fetching courses:", error);
     return [];
   }
@@ -48,8 +50,6 @@ export async function getAllCourses(): Promise<CourseData[]> {
  * Get course detail by slug
  */
 export async function getCourseBySlug(slug: string): Promise<CourseData | null> {
-  const supabase = getSupabase();
-
   const { data, error } = await supabase
     .from("courses")
     .select("*")
@@ -57,6 +57,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseData | null> 
     .single();
 
   if (error || !data) {
+    if (error?.message?.includes('AbortError')) return null;
     console.error("Error fetching course detail:", error);
     return null;
   }
@@ -78,13 +79,11 @@ export async function getCourseBySlug(slug: string): Promise<CourseData | null> 
  * Get all lessons for a course by its slug
  */
 export async function getLessonsByCourseSlug(courseSlug: string) {
-  const supabase = getSupabase();
-  
   const { data: course } = await supabase
     .from("courses")
     .select("id")
     .eq("slug", courseSlug)
-    .single();
+    .maybeSingle();
 
   if (!course) return [];
 
@@ -95,6 +94,7 @@ export async function getLessonsByCourseSlug(courseSlug: string) {
     .order("sort_order", { ascending: true });
 
   if (error) {
+    if (error.message?.includes('AbortError')) return [];
     console.error("Error fetching lessons:", error);
     return [];
   }
@@ -115,8 +115,6 @@ export async function getLessonsByCourseSlug(courseSlug: string) {
  * Get lesson details including videos
  */
 export async function getLessonDetailBySlug(courseSlug: string, lessonSlug: string) {
-  const supabase = getSupabase();
-
   // We query lessons joining with courses to ensure the lesson belongs to the right course
   const { data: lesson, error } = await supabase
     .from("lessons")
@@ -130,6 +128,7 @@ export async function getLessonDetailBySlug(courseSlug: string, lessonSlug: stri
     .maybeSingle();
 
   if (error) {
+    if (error.message?.includes('AbortError')) return null;
     console.error("Error fetching lesson detail:", error);
     return null;
   }

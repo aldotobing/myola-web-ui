@@ -29,14 +29,13 @@ import Link from "next/link";
 import NextImage from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { mutate } = useSWRConfig();
   
-  const [members, setMembers] = useState<any[]>([]);
-  const [sales, setSales] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
@@ -57,26 +56,25 @@ export default function AdminUsersPage() {
   const [ktpUrl, setKtpUrl] = useState("");
   const [isLoadingKtp, setIsLoadingKtp] = useState(false);
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [m, s] = await Promise.all([adminGetMembers(), adminGetSales()]);
-      setMembers(m);
-      setSales(s);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Protect Route
   useEffect(() => {
     if (user && user.role !== 'admin') {
       router.push('/dashboard');
-      return;
     }
-    if (user) fetchData();
-  }, [user]);
+  }, [user, router]);
+
+  // SWR Fetching
+  const { data: members = [], isLoading: isLoadingMembers } = useSWR(
+    user?.role === 'admin' ? 'admin-members' : null,
+    adminGetMembers
+  );
+
+  const { data: sales = [], isLoading: isLoadingSales } = useSWR(
+    user?.role === 'admin' ? 'admin-sales' : null,
+    adminGetSales
+  );
+
+  const isLoading = isLoadingMembers || isLoadingSales;
 
   const handleApprove = async (userId: string) => {
     if (!confirm("Approve member ini? Member akan mendapatkan 49.000 poin otomatis.")) return;
@@ -92,7 +90,7 @@ export default function AdminUsersPage() {
       if (!response.ok) throw new Error("Gagal approve member");
 
       toast.success("Member berhasil diaktifkan!");
-      await fetchData();
+      mutate('admin-members');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -148,7 +146,7 @@ export default function AdminUsersPage() {
       await adminUpdateMemberPoints(selectedUser.user_id, parseInt(newPoints), pointReason);
       toast.success("Poin berhasil diperbarui!");
       setIsPointsModalOpen(false);
-      fetchData();
+      mutate('admin-members');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -172,7 +170,7 @@ export default function AdminUsersPage() {
 
       toast.success("Status berhasil diperbarui!");
       setIsStatusModalOpen(false);
-      fetchData();
+      mutate('admin-members');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -180,7 +178,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && members.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-12 h-12 text-pink-500 animate-spin" />
@@ -188,7 +186,7 @@ export default function AdminUsersPage() {
     );
   }
 
-  const filteredMembers = members.filter(m => 
+  const filteredMembers = (members as any[]).filter(m => 
     m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.phone?.includes(searchTerm)
   );
@@ -259,7 +257,7 @@ export default function AdminUsersPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y border-gray-100">
-                    {filteredMembers.map((member) => (
+                    {filteredMembers.map((member: any) => (
                       <tr key={member.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
@@ -340,9 +338,8 @@ export default function AdminUsersPage() {
           </TabsContent>
 
           <TabsContent value="sales">
-            {/* ... sales content remains same ... */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sales.map((item) => (
+              {sales.map((item: any) => (
                 <div key={item.id} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-pink-200 transition-all group relative">
                   <div className="flex items-center justify-between mb-6">
                     <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl font-black">
@@ -487,7 +484,7 @@ export default function AdminUsersPage() {
                     alt="KTP Member" 
                     fill 
                     className="object-contain"
-                    unoptimized // Signed URLs usually better unoptimized to avoid proxy errors
+                    unoptimized 
                   />
                 </div>
               ) : (

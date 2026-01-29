@@ -3,7 +3,7 @@
 // app/contexts/AuthContext.tsx
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -33,33 +33,46 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Create client outside component to prevent recreation on every render
+const supabase = createClient();
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  
+  // Refs to prevent race conditions and aborted signals
+  const fetchingRef = useRef<string | null>(null);
+  const isMounted = useRef(true);
 
   const fetchProfile = useCallback(async (sUser: SupabaseUser) => {
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", sUser.id)
-        .single();
+    // Prevent multiple simultaneous fetches for same user
+    if (fetchingRef.current === sUser.id) return;
+    fetchingRef.current = sUser.id;
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
+    try {
+      // Fetch profile and membership in parallel for speed
+      const [profileRes, membershipRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", sUser.id).maybeSingle(),
+        supabase.from("memberships")
+          .select("expires_at, status")
+          .eq("user_id", sUser.id)
+          .order("activated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ]);
+
+      if (!isMounted.current) return;
+
+      if (profileRes.error) {
+        // Ignore AbortError as it's usually benign (tab switching/strict mode)
+        if (profileRes.error.message?.includes('AbortError')) return;
+        console.error("Error fetching profile:", profileRes.error);
         return;
       }
 
-      // Also fetch membership
-      const { data: membership } = await supabase
-        .from("memberships")
-        .select("expires_at, status")
-        .eq("user_id", sUser.id)
-        .order("activated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const profile = profileRes.data;
+      const membership = membershipRes.data;
 
       if (profile) {
         setUser({
@@ -75,37 +88,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           memberUntil: membership?.expires_at || (membership?.status === 'active' ? 'LIFETIME' : null),
         });
       }
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
+    } catch (error: any) {
+      if (!error.message?.includes('AbortError')) {
+        console.error("Failed to fetch profile:", error);
+      }
+    } finally {
+      fetchingRef.current = null;
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
-    // 1. Loading Watchdog - Force stop loading after 10s if stuck
+    isMounted.current = true;
+
+    // 1. Loading Watchdog
     const watchdog = setTimeout(() => {
-      if (isLoading) {
-        console.warn("Auth initialization timed out. Forcing finish.");
+      if (isLoading && isMounted.current) {
         setIsLoading(false);
       }
-    }, 10000);
+    }, 8000);
 
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (session?.user) {
+        if (session?.user && isMounted.current) {
           setSupabaseUser(session.user);
           await fetchProfile(session.user);
         }
       } catch (err) {
         console.error("Auth init error:", err);
       } finally {
-        setIsLoading(false);
-        clearTimeout(watchdog);
+        if (isMounted.current) {
+          setIsLoading(false);
+          clearTimeout(watchdog);
+        }
       }
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
+          if (!isMounted.current) return;
+
           if (session?.user) {
             setSupabaseUser(session.user);
             await fetchProfile(session.user);
@@ -122,39 +144,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     };
 
-    // 2. Window Focus Listener - Re-verify session when user returns to tab
-    const handleFocus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Refresh profile data silently in background to keep points/status in sync
-        fetchProfile(session.user);
-      }
+    // 2. Focus Listener (Debounced)
+    let focusTimer: any;
+    const handleFocus = () => {
+      clearTimeout(focusTimer);
+      focusTimer = setTimeout(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user && isMounted.current) {
+          fetchProfile(session.user);
+        }
+      }, 500); // Wait 500ms before re-fetching on focus
     };
 
     window.addEventListener('focus', handleFocus);
     initializeAuth();
 
     return () => {
+      isMounted.current = false;
       window.removeEventListener('focus', handleFocus);
       clearTimeout(watchdog);
+      clearTimeout(focusTimer);
     };
-  }, [supabase, fetchProfile]);
+  }, [fetchProfile, isLoading]);
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      
-      // Clear local state
       setUser(null);
       setSupabaseUser(null);
-
-      // Clear sensitive local storage items
       localStorage.removeItem("myola_cart");
       localStorage.removeItem("checkout_items");
       localStorage.removeItem("payment_data");
       localStorage.removeItem("event_checkout_data");
       localStorage.removeItem("memberRegistrationData");
-      
     } catch (error) {
       console.error("Error signing out:", error);
     }

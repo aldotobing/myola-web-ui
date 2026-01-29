@@ -1,6 +1,8 @@
 /** @format */
 
-import { createClient as getSupabase } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 export interface ProductData {
   slug: string;
@@ -44,8 +46,6 @@ export interface ProductDetailData {
  * Get all products from Supabase
  */
 export async function getAllProducts(): Promise<ProductData[]> {
-  const supabase = getSupabase();
-  
   const { data, error } = await supabase
     .from("products")
     .select(`
@@ -56,6 +56,7 @@ export async function getAllProducts(): Promise<ProductData[]> {
     .eq("is_active", true);
 
   if (error) {
+    if (error.message?.includes('AbortError')) return [];
     console.error("Error fetching products:", error);
     return [];
   }
@@ -78,8 +79,6 @@ export async function getAllProducts(): Promise<ProductData[]> {
 export async function getProductDetailBySlug(
   slug: string
 ): Promise<ProductDetailData | null> {
-  const supabase = getSupabase();
-
   const { data: product, error } = await supabase
     .from("products")
     .select(`
@@ -92,9 +91,10 @@ export async function getProductDetailBySlug(
       )
     `)
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (error || !product) {
+    if (error?.message?.includes('AbortError')) return null;
     console.error("Error fetching product detail:", error);
     return null;
   }

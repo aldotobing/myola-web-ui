@@ -1,6 +1,8 @@
 /** @format */
 
-import { createClient as getSupabase } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 export interface EventData {
   id: string;
@@ -33,8 +35,6 @@ export interface EventDetail {
  * Get all events from Supabase
  */
 export async function getAllEvents(): Promise<EventData[]> {
-  const supabase = getSupabase();
-  
   const { data, error } = await supabase
     .from("events")
     .select("*")
@@ -42,6 +42,7 @@ export async function getAllEvents(): Promise<EventData[]> {
     .order("event_date", { ascending: true });
 
   if (error) {
+    if (error.message?.includes('AbortError')) return [];
     console.error("Error fetching events:", error);
     return [];
   }
@@ -67,15 +68,14 @@ export async function getAllEvents(): Promise<EventData[]> {
 export async function getEventDetailBySlug(
   slug: string
 ): Promise<EventDetail | null> {
-  const supabase = getSupabase();
-
   const { data: event, error } = await supabase
     .from("events")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (error || !event) {
+    if (error?.message?.includes('AbortError')) return null;
     console.error("Error fetching event detail:", error);
     return null;
   }

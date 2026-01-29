@@ -1,86 +1,73 @@
 /** @format */
 
-// app/event/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, ChevronDown, Loader2 } from "lucide-react";
-import EventCard, { EventCardProps } from "@/components/layout/eventcard";
-import { getAllEvents, EventData } from "@/lib/service/member/event-catalog";
+import { useState } from "react";
+import { Search, ChevronDown, Calendar, Loader2 } from "lucide-react";
+import EventCard from "@/components/layout/eventcard";
+import { getAllEvents } from "@/lib/service/member/event-catalog";
+import useSWR from "swr";
 
 export default function EventPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<string>("all");
-  const [events, setEvents] = useState<EventData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      const data = await getAllEvents();
-      setEvents(data as any);
-      setIsLoading(false);
-    };
-    fetchEvents();
-  }, []);
+  // Use SWR for resilient event fetching
+  const { data: events = [], isLoading, error } = useSWR('all-events', getAllEvents, {
+    revalidateOnFocus: true,
+    dedupingInterval: 10000
+  });
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesFilter =
-      selectedFilter === "all" || event.category === selectedFilter;
-    return matchesSearch && matchesFilter;
+    const matchesCategory =
+      selectedCategory === "all" || event.category === selectedCategory;
+    return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <section className="bg-white py-16 px-4">
+      {/* Hero Section */}
+      <section className="bg-white py-16 px-4 border-b border-gray-100">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            Event <span className="text-pink-500">MyOLA</span>
+            MyOLA Events
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto">
-            Temukan berbagai{" "}
-            <span className="font-semibold text-pink-500">
-              kegiatan edukatif dan inspiratif
-            </span>{" "}
-            yang mempertemukan passion, keterampilan, dan inovasi di dunia tata
-            rambut.
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto font-medium leading-relaxed">
+            Ikuti workshop, masterclass, dan seminar eksklusif bersama para ahli di industri salon. 
+            Kesempatan emas untuk networking dan belajar teknik baru secara langsung.
           </p>
         </div>
       </section>
 
-      {/* Filter & Search Section */}
-      <section className="py-8 px-4 bg-white sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            {/* Filter Dropdown */}
-            <div className="relative w-full md:w-auto">
-              <select
-                value={selectedFilter}
-                onChange={(e) => setSelectedFilter(e.target.value)}
-                className="w-full md:w-48 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 font-medium bg-gray-50 focus:outline-none focus:border-pink-500 cursor-pointer appearance-none"
-              >
-                <option value="all">Semua Kategori</option>
-                <option value="MASTERCLASS">Masterclass</option>
-                <option value="WORKSHOP">Workshop</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-            </div>
+      {/* Filter Section */}
+      <section className="py-8 px-4 bg-white sticky top-20 z-30 shadow-sm border-b">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:w-48">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full md:w-48 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 font-bold bg-gray-50 focus:outline-none focus:border-pink-500 cursor-pointer appearance-none"
+            >
+              <option value="all">Semua Event</option>
+              <option value="MASTERCLASS">Masterclass</option>
+              <option value="WORKSHOP">Workshop</option>
+              <option value="SEMINAR">Seminar</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          </div>
 
-            {/* Search Bar */}
-            <div className="relative w-full md:w-96">
-              <input
-                type="text"
-                placeholder="Cari event seru..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 text-gray-700 transition-all"
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            </div>
+          <div className="relative w-full md:w-96">
+            <input
+              type="text"
+              placeholder="Cari event menarik..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 text-gray-700 font-medium transition-all"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
         </div>
       </section>
@@ -88,25 +75,39 @@ export default function EventPage() {
       {/* Events Grid */}
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
+          {error && (
+            <div className="mb-8 p-6 bg-red-50 text-red-600 rounded-3xl border border-red-100 font-bold text-center">
+              Gagal mengambil jadwal event. Silakan refresh atau coba beberapa saat lagi.
+            </div>
+          )}
+
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24">
               <Loader2 className="w-12 h-12 text-pink-500 animate-spin mb-4" />
-              <p className="text-gray-500 font-medium">Memuat event...</p>
+              <p className="text-gray-500 font-bold">Mencari agenda event terbaru...</p>
             </div>
           ) : filteredEvents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredEvents.map((event) => (
-                <EventCard key={event.id} {...(event as any)} />
+                <EventCard
+                  key={event.id}
+                  id={event.id}
+                  title={event.title}
+                  image={event.image}
+                  date={event.date}
+                  time={event.time}
+                  category={event.category}
+                  slug={event.slug}
+                />
               ))}
             </div>
           ) : (
-            <div className="text-center py-24 bg-white rounded-2xl border-2 border-dashed border-gray-100">
-              <p className="text-2xl text-gray-900 font-bold mb-2">
-                Tidak ada event yang ditemukan
-              </p>
-              <p className="text-gray-500">
-                Silakan cek kembali kata kunci atau pilih kategori lain
-              </p>
+            <div className="text-center py-24 bg-white rounded-[40px] border-2 border-dashed border-gray-100">
+              <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Calendar className="w-12 h-12 text-gray-200" />
+              </div>
+              <h3 className="text-2xl text-gray-900 font-black mb-2">Event tidak ditemukan</h3>
+              <p className="text-gray-500 font-medium">Belum ada agenda untuk kategori ini dalam waktu dekat.</p>
             </div>
           )}
         </div>

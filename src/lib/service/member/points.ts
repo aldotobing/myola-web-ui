@@ -1,6 +1,8 @@
 /** @format */
 
-import { createClient as getSupabase } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 export interface PointTransaction {
   id: string;
@@ -18,8 +20,6 @@ export interface PointTransaction {
  * Get all point transactions for a user
  */
 export async function getPointTransactions(userId?: string): Promise<PointTransaction[]> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -33,6 +33,7 @@ export async function getPointTransactions(userId?: string): Promise<PointTransa
     .order("created_at", { ascending: false });
 
   if (error) {
+    if (error.message?.includes('AbortError')) return [];
     console.error("Error fetching point transactions:", error);
     return [];
   }
