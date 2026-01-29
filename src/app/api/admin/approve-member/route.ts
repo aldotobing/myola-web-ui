@@ -33,12 +33,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    // Update membership status to active
+    // Update membership status to active and payment to paid
     // This will trigger 'handle_membership_activation' in the DB automatically
     const { data, error: membershipError } = await adminClient
       .from('memberships')
       .update({
         status: 'active',
+        payment_status: 'paid',
         activated_at: new Date().toISOString()
       })
       .eq('user_id', userId)

@@ -114,9 +114,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSupabaseUser(null);
+    try {
+      await supabase.auth.signOut();
+      
+      // Clear local state
+      setUser(null);
+      setSupabaseUser(null);
+
+      // Clear sensitive local storage items
+      localStorage.removeItem("myola_cart");
+      localStorage.removeItem("checkout_items");
+      localStorage.removeItem("payment_data");
+      localStorage.removeItem("event_checkout_data");
+      localStorage.removeItem("memberRegistrationData");
+      
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   const refreshProfile = async () => {

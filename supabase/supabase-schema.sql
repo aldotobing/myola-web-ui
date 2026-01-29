@@ -1093,8 +1093,9 @@ BEGIN
             );
         END IF;
 
-        -- 4. Set activation timestamp
+        -- 4. Set activation timestamp and expiration (1 month from now)
         NEW.activated_at = NOW();
+        NEW.expires_at = NOW() + INTERVAL '1 month';
     END IF;
     
     RETURN NEW;

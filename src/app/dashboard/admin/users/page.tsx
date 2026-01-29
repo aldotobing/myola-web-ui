@@ -150,6 +150,7 @@ export default function AdminUsersPage() {
                     <tr className="bg-gray-50/50 border-b border-gray-100">
                       <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Member</th>
                       <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Kontak & Referral</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase text-center">Pembayaran</th>
                       <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase text-center">Status</th>
                       <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase text-center">Aksi</th>
                     </tr>
@@ -171,6 +172,13 @@ export default function AdminUsersPage() {
                         <td className="px-6 py-4">
                           <p className="text-sm text-gray-700 font-medium">{member.phone}</p>
                           <p className="text-xs text-pink-500 font-bold">Code: {member.referral_code_used || 'DIRECT'}</p>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {member.payment_status === 'paid' ? (
+                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">LUNAS</span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md">BELUM BAYAR</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-center">
                           {member.membership_status === 'active' ? (

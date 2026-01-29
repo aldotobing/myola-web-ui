@@ -282,7 +282,7 @@ export async function adminGetMembers() {
     .from("profiles")
     .select(`
       *,
-      memberships(status)
+      memberships(status, payment_status)
     `)
     .eq("role", "member")
     .order("created_at", { ascending: false });
@@ -292,7 +292,8 @@ export async function adminGetMembers() {
   // Flatten the response so UI can easily read 'status'
   return data.map((profile: any) => ({
     ...profile,
-    membership_status: profile.memberships?.[0]?.status || 'no_record'
+    membership_status: profile.memberships?.[0]?.status || 'no_record',
+    payment_status: profile.memberships?.[0]?.payment_status || 'no_record'
   }));
 }
 

@@ -33,7 +33,12 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  // 1. Redirect if not logged in and accessing dashboard
+  // 1. Redirect if logged in and trying to access auth pages (login/register)
+  if (user && (pathname.startsWith('/auth') || pathname === '/login' || pathname === '/register')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // 2. Redirect if not logged in and accessing dashboard
   if (!user && pathname.startsWith('/dashboard')) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'

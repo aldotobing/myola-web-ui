@@ -269,13 +269,22 @@ export default function ProfilePage() {
             <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-6">Profil</h2>
 
             {/* Membership Expiry Banner */}
-            <div className="bg-gradient-to-r from-pink-50 to-white border border-pink-200 rounded-xl mb-8 px-6 py-4 flex items-center justify-between">
+            <div className={`border rounded-xl mb-8 px-6 py-4 flex items-center justify-between ${
+              membership?.expires_at && (new Date(membership.expires_at).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000
+                ? "bg-orange-50 border-orange-200"
+                : "bg-gradient-to-r from-pink-50 to-white border-pink-200"
+            }`}>
               <div className="flex items-center gap-4">
                 <Image src="/images/myola-member-logo.png" alt="MyOLA Logo" width={80} height={40} className="object-contain" />
                 <div>
-                  <p className="text-pink-600 font-bold text-sm">MEMBER AKTIF</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-pink-600 font-bold text-sm uppercase">Member Aktif</p>
+                    {membership?.expires_at && (new Date(membership.expires_at).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000 && (
+                      <span className="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse">SEGERA BERAKHIR</span>
+                    )}
+                  </div>
                   <p className="text-gray-600 text-xs">
-                    Berakhir pada: {membership?.expires_at ? new Date(membership.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Lifetime"}
+                    Berakhir pada: {membership?.expires_at ? new Date(membership.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : (membership ? "Lifetime" : "-")}
                   </p>
                 </div>
               </div>

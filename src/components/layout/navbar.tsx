@@ -18,6 +18,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../app/contexts/AuthContexts";
 import { useCart } from "../../app/contexts/CartContexts";
+import LogoutModal from "../auth/LogoutModal";
 
 interface NavLink {
   name: string;
@@ -27,6 +28,8 @@ interface NavLink {
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
@@ -45,10 +48,21 @@ export default function Navbar() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push("/");
-    setShowDropdown(false);
-    setIsMenuOpen(false);
+    setIsLoggingOut(true);
+    try {
+      // Add a small artificial delay to let the sophisticated animation "breathe"
+      await new Promise(resolve => setTimeout(resolve, 1800));
+      
+      await signOut();
+      router.push("/");
+      setIsLogoutModalOpen(false);
+      setShowDropdown(false);
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const handleProfileClick = () => {
@@ -128,29 +142,31 @@ export default function Navbar() {
                     <div className="px-6 py-4 border-b border-gray-100 mb-2">
                       <p className="font-bold text-gray-900 truncate">{user.full_name}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                      <div className="mt-3 flex items-center justify-between">
-                         <span className="text-xs font-bold text-pink-600 bg-pink-50 px-2 py-1 rounded-lg uppercase">{user.role}</span>
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                         <div className="flex flex-col gap-1">
+                            <span className="text-[10px] w-fit font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded uppercase">{user.role}</span>
+                            {user.memberUntil && (new Date(user.memberUntil).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000 && (
+                              <span className="text-[9px] font-black text-orange-600 animate-pulse">⚠️ SEGERA BERAKHIR</span>
+                            )}
+                         </div>
                          {user.role === 'member' && (
                            <span className="text-xs font-bold text-gray-700">{user.points_balance?.toLocaleString()} Poin</span>
                          )}
                       </div>
                     </div>
 
-                    {/* Admin Dashboard Link */}
                     {user.role === 'admin' && (
                       <Link href="/dashboard/admin" onClick={() => setShowDropdown(false)} className="w-full text-left px-6 py-3 text-pink-600 hover:bg-pink-50 font-bold flex items-center gap-3 transition-colors">
                         <LayoutDashboard size={18} /> Master Dashboard
                       </Link>
                     )}
 
-                    {/* Sales Dashboard Link - Only for Sales Role */}
                     {user.role === 'sales' && (
                       <Link href="/dashboard/sales" onClick={() => setShowDropdown(false)} className="w-full text-left px-6 py-3 text-blue-600 hover:bg-blue-50 font-bold flex items-center gap-3 transition-colors">
                         <LayoutDashboard size={18} /> Sales Dashboard
                       </Link>
                     )}
 
-                    {/* Member Links */}
                     <button onClick={handleProfileClick} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
                       <User size={18} /> Profil Saya
                     </button>
@@ -167,7 +183,7 @@ export default function Navbar() {
                     )}
 
                     <div className="border-t border-gray-100 my-2"></div>
-                    <button onClick={handleSignOut} className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50 font-bold flex items-center gap-3 transition-colors">
+                    <button onClick={() => setIsLogoutModalOpen(true)} className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50 font-bold flex items-center gap-3 transition-colors">
                       <LogOut size={18} /> Keluar
                     </button>
                   </div>
@@ -207,7 +223,6 @@ export default function Navbar() {
                     <p className="text-sm text-gray-500 uppercase font-bold text-pink-600">{user.role}</p>
                   </div>
 
-                  {/* Role based mobile links */}
                   {user.role === 'admin' && (
                     <Link href="/dashboard/admin" onClick={() => setIsMenuOpen(false)} className="w-full text-left px-4 py-3 rounded-xl bg-pink-50 text-pink-600 font-bold flex items-center gap-3">
                       <LayoutDashboard size={20} /> Master Dashboard
@@ -234,6 +249,11 @@ export default function Navbar() {
                       </button>
                     </>
                   )}
+                  
+                  <div className="border-t border-gray-100 my-2"></div>
+                  <button onClick={() => setIsLogoutModalOpen(true)} className="w-full text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-bold flex items-center gap-3">
+                    <LogOut size={20} /> Keluar
+                  </button>
                 </div>
               ) : (
                 <button onClick={handleLoginClick} className="mt-6 mx-4 bg-pink-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-100">
@@ -244,6 +264,13 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      <LogoutModal 
+        isOpen={isLogoutModalOpen} 
+        onClose={() => setIsLogoutModalOpen(false)} 
+        onConfirm={handleSignOut}
+        isLoading={isLoggingOut}
+      />
     </nav>
   );
 }
