@@ -201,7 +201,7 @@ export default function ProfilePage() {
                         : "text-gray-700 hover:bg-white hover:text-pink-600"
                     }`}
                   >
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <item.icon size={18} className="flex-shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 ))}
