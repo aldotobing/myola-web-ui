@@ -22,6 +22,7 @@ import EventCard, { EventCardProps } from "@/components/layout/eventcard";
 import PromoBanner from "@/components/layout/promobanner";
 import Footer from "@/components/layout/footer";
 import Link from "next/link";
+import { useAuth } from "@/app/contexts/AuthContexts";
 
 interface Slide {
   title: string;
@@ -31,6 +32,7 @@ interface Slide {
 }
 
 export default function Home() {
+  const { user } = useAuth();
   //Hero Slider
 
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -304,11 +306,11 @@ export default function Home() {
                     </p>
 
                     <Link
-                      href="/auth/join-member"
+                      href={user ? "/dashboard" : "/auth/join-member"}
                       className="mt-12 bg-white text-gray-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg inline-block"
-                      aria-label="Register"
+                      aria-label={user ? "Dashboard" : "Register"}
                     >
-                      Join Member
+                      {user ? "Buka Dashboard" : "Join Member"}
                     </Link>
                   </div>
 
