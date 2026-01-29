@@ -58,19 +58,19 @@ export default function Footer() {
             {/* Navigation Links */}
             <nav className="flex flex-wrap gap-8 text-lg">
               <Link
-                href="/tentang-kami"
+                href="/about"
                 className="hover:text-white/80 transition-colors font-medium"
               >
                 Tentang Kami
               </Link>
               <Link
-                href="/kursus"
+                href="/akademi"
                 className="hover:text-white/80 transition-colors font-medium"
               >
                 Kursus
               </Link>
               <Link
-                href="/produk"
+                href="/store"
                 className="hover:text-white/80 transition-colors font-medium"
               >
                 Produk
