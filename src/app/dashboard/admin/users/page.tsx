@@ -16,32 +16,48 @@ import {
   CheckCircle2,
   ShieldCheck,
   Zap,
-  DollarSign
+  DollarSign,
+  MoreHorizontal,
+  Eye,
+  Coins,
+  Trash2,
+  X,
+  Settings2
 } from "lucide-react";
-import { adminGetMembers, adminGetSales } from "@/lib/service/admin/admin-service";
+import { adminGetMembers, adminGetSales, adminUpdateMemberPoints } from "@/lib/service/admin/admin-service";
 import Link from "next/link";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
   const router = useRouter();
+  
   const [members, setMembers] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
+  // Points Modal State
+  const [isPointsModalOpen, setIsPointsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [newPoints, setNewPoints] = useState("");
+  const [pointReason, setPointReason] = useState("");
+  const [isUpdatingPoints, setIsUpdatingPoints] = useState(false);
+
+  // Status Modal State
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [memberData, salesData] = await Promise.all([
-        adminGetMembers(),
-        adminGetSales()
-      ]);
-      setMembers(memberData);
-      setSales(salesData);
+      const [m, s] = await Promise.all([adminGetMembers(), adminGetSales()]);
+      setMembers(m);
+      setSales(s);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -52,11 +68,11 @@ export default function AdminUsersPage() {
       router.push('/dashboard');
       return;
     }
-    if (user) fetchUsers();
+    if (user) fetchData();
   }, [user]);
 
   const handleApprove = async (userId: string) => {
-    if (!confirm("Konfirmasi aktivasi member secara manual? Poin dan komisi akan otomatis terhitung.")) return;
+    if (!confirm("Approve member ini? Member akan mendapatkan 49.000 poin otomatis.")) return;
     
     setApprovingId(userId);
     try {
@@ -66,15 +82,87 @@ export default function AdminUsersPage() {
         body: JSON.stringify({ userId })
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Gagal menyetujui member");
+      if (!response.ok) throw new Error("Gagal approve member");
 
       alert("Member berhasil diaktifkan!");
-      await fetchUsers(); // Refresh list
+      await fetchData();
     } catch (error: any) {
       alert(error.message);
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const handleViewKtp = async (member: any) => {
+    if (!member.ktp_image_url) {
+      alert("Member belum upload KTP");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/member/upload-ktp?path=" + encodeURIComponent(member.ktp_image_url));
+      const data = await response.json();
+      if (data.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error("Gagal mengambil data KTP");
+      }
+    } catch (error) {
+      alert("Gagal memuat KTP");
+    }
+  };
+
+  const handleOpenPoints = (member: any) => {
+    setSelectedUser(member);
+    setNewPoints(member.points_balance.toString());
+    setPointReason("");
+    setIsPointsModalOpen(true);
+  };
+
+  const handleOpenStatus = (member: any) => {
+    setSelectedUser(member);
+    setSelectedStatus(member.membership_status);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleUpdatePoints = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    setIsUpdatingPoints(true);
+    try {
+      await adminUpdateMemberPoints(selectedUser.user_id, parseInt(newPoints), pointReason);
+      alert("Poin berhasil diperbarui!");
+      setIsPointsModalOpen(false);
+      fetchData();
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsUpdatingPoints(false);
+    }
+  };
+
+  const handleUpdateStatus = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    setIsUpdatingStatus(true);
+    try {
+      const response = await fetch("/api/admin/members/update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedUser.user_id, status: selectedStatus })
+      });
+
+      if (!response.ok) throw new Error("Gagal update status");
+
+      alert("Status berhasil diperbarui!");
+      setIsStatusModalOpen(false);
+      fetchData();
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -87,14 +175,14 @@ export default function AdminUsersPage() {
   }
 
   const filteredMembers = members.filter(m => 
-    m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.phone?.includes(searchTerm)
   );
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <Link href="/dashboard/admin" className="p-2 hover:bg-white rounded-full transition-colors">
               <ArrowLeft size={24} className="text-gray-600" />
@@ -123,27 +211,28 @@ export default function AdminUsersPage() {
         <Tabs defaultValue="members" className="w-full">
           <TabsList className="bg-white p-1 rounded-2xl border border-gray-100 mb-8 inline-flex">
             <TabsTrigger value="members" className="px-8 py-3 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">
-              Daftar Member ({members.length})
+              <Users size={18} className="mr-2" /> Database Member
             </TabsTrigger>
-            <TabsTrigger value="sales" className="px-8 py-3 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">
-              Daftar Sales ({sales.length})
+            <TabsTrigger value="sales" className="px-8 py-3 rounded-xl data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+              <ShieldCheck size={18} className="mr-2" /> Staf Sales
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="members">
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 flex items-center gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input 
-                    type="text"
-                    placeholder="Cari member (nama, nomor HP, atau email)..."
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-pink-500 outline-none transition-all"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input 
+                  type="text"
+                  placeholder="Cari member berdasarkan nama atau nomor HP..."
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-pink-500 outline-none transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -165,7 +254,10 @@ export default function AdminUsersPage() {
                             </div>
                             <div>
                               <p className="font-bold text-gray-900">{member.full_name}</p>
-                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">ID: {member.user_id.slice(0,8)}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">ID: {member.user_id.slice(0,8)}</span>
+                                <span className="text-[10px] text-pink-600 font-black flex items-center gap-0.5"><Coins size={10}/> {member.points_balance?.toLocaleString()}</span>
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -181,11 +273,20 @@ export default function AdminUsersPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-center">
-                          {member.membership_status === 'active' ? (
-                            <span className="inline-block px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-full border border-green-100">AKTIF</span>
-                          ) : (
-                            <span className="inline-block px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black rounded-full border border-orange-100">PENDING</span>
-                          )}
+                          <button 
+                            onClick={() => handleOpenStatus(member)}
+                            className="hover:scale-105 transition-transform"
+                          >
+                            {member.membership_status === 'active' ? (
+                              <span className="inline-block px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-full border border-green-100 uppercase">AKTIF</span>
+                            ) : member.membership_status === 'expired' ? (
+                              <span className="inline-block px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black rounded-full border border-red-100 uppercase">EXPIRED</span>
+                            ) : member.membership_status === 'cancelled' ? (
+                              <span className="inline-block px-3 py-1 bg-gray-100 text-gray-400 text-[10px] font-black rounded-full border border-gray-200 uppercase">CANCELLED</span>
+                            ) : (
+                              <span className="inline-block px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black rounded-full border border-orange-100 uppercase">PENDING</span>
+                            )}
+                          </button>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex justify-center gap-2">
@@ -198,8 +299,21 @@ export default function AdminUsersPage() {
                                 {approvingId === member.user_id ? <Loader2 size={12} className="animate-spin" /> : <Zap size={12} />} Approve
                               </button>
                             )}
-                            <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-400" title="Detail User">
-                              <ExternalLink size={16} />
+                            
+                            <button 
+                              onClick={() => handleViewKtp(member)}
+                              className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                              title="Lihat KTP"
+                            >
+                              <Eye size={16} />
+                            </button>
+
+                            <button 
+                              onClick={() => handleOpenPoints(member)}
+                              className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                              title="Edit Poin"
+                            >
+                              <Coins size={16} />
                             </button>
                           </div>
                         </td>
@@ -212,6 +326,7 @@ export default function AdminUsersPage() {
           </TabsContent>
 
           <TabsContent value="sales">
+            {/* ... sales content remains same ... */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sales.map((item) => (
                 <div key={item.id} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-pink-200 transition-all group relative">
@@ -252,7 +367,6 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="mt-8 flex gap-2">
                     <Link 
                       href={`/dashboard/admin/users/sales/${item.id}`}
@@ -267,6 +381,67 @@ export default function AdminUsersPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Adjust Points Modal */}
+      {isPointsModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[32px] max-w-sm w-full p-8 shadow-2xl animate-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Coins className="text-blue-500" /> Atur Saldo Poin
+              </h3>
+              <button onClick={() => setIsPointsModalOpen(false)}><X className="text-gray-400" /></button>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">Sesuaikan poin untuk <strong>{selectedUser?.full_name}</strong>. Saldo saat ini: {selectedUser?.points_balance?.toLocaleString()}</p>
+            <form onSubmit={handleUpdatePoints} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Jumlah Poin Baru</label>
+                <input type="number" required className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg" value={newPoints} onChange={(e) => setNewPoints(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Alasan Penyesuaian</label>
+                <textarea required placeholder="Contoh: Bonus Event Khusus" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm" rows={2} value={pointReason} onChange={(e) => setPointReason(e.target.value)} />
+              </div>
+              <button type="submit" disabled={isUpdatingPoints} className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                {isUpdatingPoints && <Loader2 className="animate-spin" size={18} />} Simpan Perubahan
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Adjust Status Modal */}
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[32px] max-w-sm w-full p-8 shadow-2xl animate-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Settings2 className="text-pink-500" /> Ubah Status Member
+              </h3>
+              <button onClick={() => setIsStatusModalOpen(false)}><X className="text-gray-400" /></button>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">Ubah status akses untuk <strong>{selectedUser?.full_name}</strong>.</p>
+            <form onSubmit={handleUpdateStatus} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Pilih Status Baru</label>
+                <select 
+                  className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-pink-500 outline-none font-bold"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="active">Active (Full Access)</option>
+                  <option value="expired">Expired</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <button type="submit" disabled={isUpdatingStatus} className="w-full py-4 bg-pink-500 text-white font-bold rounded-2xl shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                {isUpdatingStatus && <Loader2 className="animate-spin" size={18} />} Perbarui Status
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

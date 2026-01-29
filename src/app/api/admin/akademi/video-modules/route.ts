@@ -2,35 +2,29 @@ import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { NextResponse } from 'next/server'
 
-const slugify = (text: string) => {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "")
-    .replace(/--+/g, "-");
-};
-
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user: requester } } = await supabase.auth.getUser()
     if (!requester) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('user_id', requester.id).single()
+    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const adminClient = createAdminClient()
     const body = await request.json()
-    const { course_id, title, duration, level, thumbnail_url } = body
+    const { lesson_id, title, description, duration, video_url, youtube_url, sort_order } = body
 
     const { data, error } = await adminClient
-      .from('lessons')
+      .from('video_modules')
       .insert({
-        course_id,
+        lesson_id,
         title,
-        slug: slugify(title),
+        description,
         duration,
-        level,
-        thumbnail_url,
+        video_url,
+        youtube_url,
+        sort_order: sort_order || 0,
         is_active: true
       })
       .select()
@@ -49,23 +43,25 @@ export async function PATCH(request: Request) {
     const { data: { user: requester } } = await supabase.auth.getUser()
     if (!requester) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('user_id', requester.id).single()
+    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const adminClient = createAdminClient()
     const body = await request.json()
-    const { id, title, duration, level, thumbnail_url } = body
-
-    const updates: any = {
-      title,
-      duration,
-      level,
-      updated_at: new Date().toISOString()
-    }
-
-    if (title) updates.slug = slugify(title)
-    if (thumbnail_url) updates.thumbnail_url = thumbnail_url
+    const { id, title, description, duration, video_url, youtube_url, sort_order, is_active } = body
 
     const { data, error } = await adminClient
-      .from('lessons')
-      .update(updates)
+      .from('video_modules')
+      .update({
+        title,
+        description,
+        duration,
+        video_url,
+        youtube_url,
+        sort_order,
+        is_active,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single()
@@ -79,10 +75,19 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const supabase = await createClient()
+    const { data: { user: requester } } = await supabase.auth.getUser()
+    if (!requester) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('user_id', requester.id).single()
+    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+
     const adminClient = createAdminClient()
-    const { error } = await adminClient.from('lessons').delete().eq('id', id)
+    const { error } = await adminClient.from('video_modules').delete().eq('id', id)
+
     if (error) throw error
     return NextResponse.json({ success: true })
   } catch (error: any) {

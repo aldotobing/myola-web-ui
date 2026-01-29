@@ -270,8 +270,21 @@ export async function adminGetVideoModules(lessonId: string) {
   return data;
 }
 
+export async function adminGetVideoModuleById(id: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("video_modules")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function adminCreateVideoModule(module: any) {
   const supabase = getSupabase();
+  
   const { data, error } = await supabase
     .from("video_modules")
     .insert({
@@ -289,7 +302,10 @@ export async function adminUpdateVideoModule(id: string, updates: any) {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("video_modules")
-    .update(updates)
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
     .eq("id", id)
     .select()
     .single();
@@ -405,6 +421,41 @@ export async function adminGetMembers() {
   }));
 }
 
+export async function adminUpdateMemberPoints(userId: string, points: number, reason: string) {
+  const supabase = getSupabase();
+  
+  // 1. Get current balance
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("points_balance")
+    .eq("user_id", userId)
+    .single();
+
+  const oldBalance = profile?.points_balance || 0;
+  const newBalance = points; // We are setting the absolute value here, or we could do offset. Let's do absolute for admin control.
+
+  // 2. Update profile
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ points_balance: newBalance })
+    .eq("user_id", userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // 3. Log transaction
+  await supabase.from("point_transactions").insert({
+    user_id: userId,
+    transaction_type: 'admin_adjustment',
+    amount: newBalance - oldBalance,
+    balance_after: newBalance,
+    description: reason || "Penyesuaian oleh Admin"
+  });
+
+  return data;
+}
+
 export async function adminGetSales() {
   const supabase = getSupabase();
   
@@ -460,6 +511,23 @@ export async function adminApproveCommission(commissionId: string, reference?: s
       payout_reference: reference || `MANUAL-${Date.now()}`
     })
     .eq("id", commissionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminUpdateMembershipStatus(userId: string, status: string) {
+  const supabase = getSupabase();
+  
+  const { data, error } = await supabase
+    .from("memberships")
+    .update({ 
+      status,
+      updated_at: new Date().toISOString()
+    })
+    .eq("user_id", userId)
     .select()
     .single();
 

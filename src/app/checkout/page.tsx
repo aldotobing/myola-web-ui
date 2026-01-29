@@ -20,8 +20,8 @@ export default function CheckoutPage() {
   const { user } = useAuth();
 
   // User status checks
-  const isLoggedIn = !!user || false;
-  const isMember = isLoggedIn && isMemberActive(user?.memberUntil);
+  const isLoggedIn = !!user;
+  const isMember = isLoggedIn && (isMemberActive(user?.memberUntil) || user?.role === 'admin');
 
   // Feature eligibility based on user status
   const isEligibleCashback = isMember; // Only active members get cashback

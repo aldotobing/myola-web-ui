@@ -30,16 +30,25 @@ export async function getUserCourses(
     return [];
   }
 
-  // 2. Fetch user enrollments and progress
+  // 2. Fetch user enrollments
   const { data: enrollments } = await supabase
     .from("course_enrollments")
     .select("*")
     .eq("user_id", userId);
 
-  // 3. For each course, fetch lessons and videos to flatten them
-  const coursesWithDetails = await Promise.all(
-    courses.map(async (course) => {
-      const enrollment = enrollments?.find((e) => e.course_id === course.id);
+  if (!enrollments || enrollments.length === 0) return [];
+
+  // 3. For each enrollment, fetch course details and progress
+  const enrolledCourses = await Promise.all(
+    enrollments.map(async (enrollment) => {
+      // Get course basic info
+      const { data: course } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("id", enrollment.course_id)
+        .single();
+
+      if (!course) return null;
       
       // Fetch all videos for this course (via lessons)
       const { data: videosData } = await supabase
@@ -91,7 +100,7 @@ export async function getUserCourses(
     })
   );
 
-  return coursesWithDetails;
+  return enrolledCourses.filter(c => c !== null) as Course[];
 }
 
 /**

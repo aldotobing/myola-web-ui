@@ -107,6 +107,7 @@ export async function getLessonsByCourseSlug(courseSlug: string) {
     videoCount: l.video_count,
     thumbnail: l.thumbnail_url || "https://placehold.co/400x225/ec4899/ffffff?text=Lesson",
     slug: l.slug,
+    courseSlug: courseSlug,
   }));
 }
 
@@ -116,6 +117,7 @@ export async function getLessonsByCourseSlug(courseSlug: string) {
 export async function getLessonDetailBySlug(courseSlug: string, lessonSlug: string) {
   const supabase = getSupabase();
 
+  // We query lessons joining with courses to ensure the lesson belongs to the right course
   const { data: lesson, error } = await supabase
     .from("lessons")
     .select(`
@@ -125,26 +127,35 @@ export async function getLessonDetailBySlug(courseSlug: string, lessonSlug: stri
     `)
     .eq("slug", lessonSlug)
     .eq("courses.slug", courseSlug)
-    .single();
+    .maybeSingle();
 
-  if (error || !lesson) {
+  if (error) {
     console.error("Error fetching lesson detail:", error);
     return null;
   }
+
+  if (!lesson) return null;
 
   return {
     id: lesson.id,
     title: lesson.title,
     slug: lesson.slug,
     description: lesson.description,
-    videos: lesson.video_modules?.map((v: any) => ({
-      id: v.id,
-      title: v.title,
-      duration: v.duration,
-      youtubeUrl: v.youtube_url,
-      order: v.sort_order,
-      skillsGained: v.skills_gained,
-      whatYouLearn: v.what_you_learn,
-    })) || [],
+    image: lesson.thumbnail_url,
+    courseId: lesson.course_id,
+    videos: (lesson.video_modules || [])
+      .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map((v: any) => ({
+        id: v.id,
+        title: v.title,
+        duration: v.duration,
+        youtubeUrl: v.youtube_url,
+        videoUrl: v.video_url,
+        order: v.sort_order,
+        description: v.description,
+        skillsGained: v.skills_gained,
+        whatYouLearn: v.what_you_learn,
+        thumbnail: v.thumbnail_url
+      })),
   };
 }

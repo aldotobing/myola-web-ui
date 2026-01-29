@@ -13,7 +13,8 @@ export interface LessonCardProps {
   thumbnail: string;
   level?: string;
   videoCount?: number;
-  courseSlug?: string; // Add course slug for proper routing
+  slug: string;
+  courseSlug: string;
 }
 
 export default function LessonCard({
@@ -24,18 +25,9 @@ export default function LessonCard({
   thumbnail,
   level,
   videoCount = 5,
+  slug,
+  courseSlug,
 }: LessonCardProps) {
-  // Generate lesson slug from title
-  const lessonSlug = title
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]/g, "");
-
-  // Generate lesson slug from title
-  const courseSlug = title
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]/g, "");
   const cardContent = (
     <div className="bg-white rounded-2xl overflow-hidden  hover:shadow-xl transition-all duration-300 group cursor-pointer">
       {/* Lesson Thumbnail */}
@@ -84,7 +76,7 @@ export default function LessonCard({
   }
 
   return (
-    <Link href={`/akademi/${courseSlug}/lesson/${lessonSlug}`}>
+    <Link href={`/akademi/${courseSlug}/lesson/${slug}`}>
       {cardContent}
     </Link>
   );

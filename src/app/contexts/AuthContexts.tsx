@@ -57,7 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from("memberships")
         .select("expires_at, status")
         .eq("user_id", sUser.id)
-        .eq("status", "active")
         .order("activated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -73,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ktp_number: profile.ktp_number,
           ktp_image_url: profile.ktp_image_url,
           phone: profile.phone,
-          memberUntil: membership?.expires_at || null,
+          memberUntil: membership?.expires_at || (membership?.status === 'active' ? 'LIFETIME' : null),
         });
       }
     } catch (error) {
@@ -156,5 +155,6 @@ export function useAuth() {
 
 export const isMemberActive = (memberUntil?: string | null) => {
   if (!memberUntil) return false;
+  if (memberUntil === 'LIFETIME') return true;
   return new Date(memberUntil).getTime() > Date.now();
 };

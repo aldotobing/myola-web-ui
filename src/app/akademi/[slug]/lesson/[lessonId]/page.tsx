@@ -33,7 +33,7 @@ export default function LessonDetailPage() {
 
   // Check user status
   const isLoggedIn = !!user;
-  const isMember = isLoggedIn && isMemberActive(user?.memberUntil);
+  const isMember = isLoggedIn && (isMemberActive(user?.memberUntil) || user?.role === 'admin');
   const canTakeCourse = isMember;
 
   useEffect(() => {
@@ -183,10 +183,24 @@ export default function LessonDetailPage() {
                         {canTakeCourse ? (
                           <div className="space-y-6">
                              <div className="aspect-video bg-black rounded-xl overflow-hidden relative group">
-                                <Image src={module.thumbnail || "/images/thumb.jpg"} alt={module.title} fill className="object-cover opacity-60 group-hover:scale-105 transition-transform" />
-                                <button className="absolute inset-0 flex items-center justify-center">
-                                   <div className="bg-pink-500 p-5 rounded-full shadow-xl hover:scale-110 transition-transform"><PlayCircle className="w-8 h-8 text-white fill-white" /></div>
-                                </button>
+                                {module.youtubeUrl ? (
+                                  <iframe 
+                                    src={`https://www.youtube.com/embed/${module.youtubeUrl.split('v=')[1] || module.youtubeUrl.split('/').pop()}`}
+                                    className="w-full h-full"
+                                    allowFullScreen
+                                  />
+                                ) : module.videoUrl ? (
+                                  <video 
+                                    src={module.videoUrl} 
+                                    controls 
+                                    className="w-full h-full"
+                                  />
+                                ) : (
+                                  <>
+                                    <Image src={module.thumbnail || "/images/thumb.jpg"} alt={module.title} fill className="object-cover opacity-60" />
+                                    <div className="absolute inset-0 flex items-center justify-center text-white font-bold">Video URL tidak tersedia</div>
+                                  </>
+                                )}
                              </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
