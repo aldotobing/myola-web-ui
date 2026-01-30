@@ -21,11 +21,13 @@ export async function adminGetProducts() {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("products")
-    .select(`
+    .select(
+      `
       *,
       product_categories(name),
       product_images(*)
-    `)
+    `,
+    )
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -33,7 +35,9 @@ export async function adminGetProducts() {
   // Map the primary image URL to a top-level image_url property for the UI
   return data.map((p: any) => ({
     ...p,
-    image_url: p.product_images?.find((img: any) => img.is_primary)?.image_url || p.product_images?.[0]?.image_url
+    image_url:
+      p.product_images?.find((img: any) => img.is_primary)?.image_url ||
+      p.product_images?.[0]?.image_url,
   }));
 }
 
@@ -52,14 +56,14 @@ export async function adminGetCategories() {
 export async function adminCreateCategory(name: string, description?: string) {
   const supabase = getSupabase();
   const slug = slugify(name);
-  
+
   const { data, error } = await supabase
     .from("product_categories")
     .insert({
       name,
       slug,
       description,
-      is_active: true
+      is_active: true,
     })
     .select()
     .single();
@@ -79,17 +83,20 @@ export async function adminDeleteCategory(id: string) {
   return true;
 }
 
-export async function adminCreateProduct(product: any, imageUrls: string[] = []) {
+export async function adminCreateProduct(
+  product: any,
+  imageUrls: string[] = [],
+) {
   const supabase = getSupabase();
   const slug = slugify(product.name);
-  
+
   // 1. Insert product
   const { data: newProduct, error } = await supabase
     .from("products")
     .insert({
       ...product,
       slug,
-      is_active: true
+      is_active: true,
     })
     .select()
     .single();
@@ -102,7 +109,7 @@ export async function adminCreateProduct(product: any, imageUrls: string[] = [])
       product_id: newProduct.id,
       image_url: url,
       is_primary: index === 0,
-      sort_order: index
+      sort_order: index,
     }));
 
     await supabase.from("product_images").insert(imagesToInsert);
@@ -112,24 +119,20 @@ export async function adminCreateProduct(product: any, imageUrls: string[] = [])
 }
 
 export async function adminUpdateProduct(id: string, updates: any) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("products")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+  const response = await fetch("/api/admin/products", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, ...updates }),
+  });
 
-  if (error) throw error;
-  return data;
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Gagal mengupdate produk");
+  return result.product;
 }
 
 export async function adminDeleteProduct(id: string) {
   const supabase = getSupabase();
-  const { error } = await supabase
-    .from("products")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("products").delete().eq("id", id);
 
   if (error) throw error;
   return true;
@@ -153,14 +156,14 @@ export async function adminGetCourses() {
 export async function adminCreateCourse(course: any) {
   const supabase = getSupabase();
   const slug = slugify(course.title);
-  
+
   const { data, error } = await supabase
     .from("courses")
     .insert({
       ...course,
       slug,
       is_active: true,
-      is_members_only: true
+      is_members_only: true,
     })
     .select()
     .single();
@@ -172,12 +175,12 @@ export async function adminCreateCourse(course: any) {
 export async function adminCreateLesson(lesson: any) {
   const supabase = getSupabase();
   const slug = slugify(lesson.title);
-  
+
   const { data, error } = await supabase
     .from("lessons")
     .insert({
       ...lesson,
-      slug
+      slug,
     })
     .select()
     .single();
@@ -192,7 +195,7 @@ export async function adminCreateVideoModule(module: any) {
     .from("video_modules")
     .insert({
       ...module,
-      is_active: true
+      is_active: true,
     })
     .select()
     .single();
@@ -219,13 +222,13 @@ export async function adminGetEvents() {
 export async function adminCreateEvent(event: any) {
   const supabase = getSupabase();
   const slug = slugify(event.title);
-  
+
   const { data, error } = await supabase
     .from("events")
     .insert({
       ...event,
       slug,
-      is_active: true
+      is_active: true,
     })
     .select()
     .single();
@@ -242,20 +245,26 @@ export async function adminGetAllOrders() {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       *,
       profiles:user_id(full_name, phone)
-    `)
+    `,
+    )
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data;
 }
 
-export async function adminUpdateOrderStatus(orderId: string, status: string, deliveryProofUrl?: string) {
+export async function adminUpdateOrderStatus(
+  orderId: string,
+  status: string,
+  deliveryProofUrl?: string,
+) {
   const supabase = getSupabase();
   const updates: any = { status, status_updated_at: new Date().toISOString() };
-  
+
   if (deliveryProofUrl) {
     updates.delivery_proof_url = deliveryProofUrl;
     updates.delivered_at = new Date().toISOString();
@@ -280,49 +289,55 @@ export async function adminGetMembers() {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("profiles")
-    .select(`
+    .select(
+      `
       *,
       memberships(status, payment_status)
-    `)
+    `,
+    )
     .eq("role", "member")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  
+
   // Flatten the response so UI can easily read 'status'
   return data.map((profile: any) => ({
     ...profile,
-    membership_status: profile.memberships?.[0]?.status || 'no_record',
-    payment_status: profile.memberships?.[0]?.payment_status || 'no_record'
+    membership_status: profile.memberships?.[0]?.status || "no_record",
+    payment_status: profile.memberships?.[0]?.payment_status || "no_record",
   }));
 }
 
 export async function adminGetSales() {
   const supabase = getSupabase();
-  
+
   // 1. Fetch sales profiles
   const { data: sales, error } = await supabase
     .from("sales")
-    .select(`
+    .select(
+      `
       *,
       profiles:user_id(full_name, phone, avatar_url, email:user_id)
-    `)
+    `,
+    )
     .order("created_at", { ascending: false });
 
   if (error) throw error;
 
   // 2. Enhance with member count (still needs a count query)
-  const enhancedSales = await Promise.all(sales.map(async (item) => {
-    const { count } = await supabase
-      .from("memberships")
-      .select("*", { count: 'exact', head: true })
-      .eq("sales_id", item.id);
+  const enhancedSales = await Promise.all(
+    sales.map(async (item) => {
+      const { count } = await supabase
+        .from("memberships")
+        .select("*", { count: "exact", head: true })
+        .eq("sales_id", item.id);
 
-    return {
-      ...item,
-      member_count: count || 0
-    };
-  }));
+      return {
+        ...item,
+        member_count: count || 0,
+      };
+    }),
+  );
 
   return enhancedSales;
 }
@@ -331,25 +346,30 @@ export async function adminGetCommissionReports() {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("commissions")
-    .select(`
+    .select(
+      `
       *,
       sales:sales_id(referral_code, profiles:user_id(full_name)),
       member:user_id(full_name)
-    `)
+    `,
+    )
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data;
 }
 
-export async function adminApproveCommission(commissionId: string, reference?: string) {
+export async function adminApproveCommission(
+  commissionId: string,
+  reference?: string,
+) {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("commissions")
     .update({
-      status: 'paid',
+      status: "paid",
       paid_at: new Date().toISOString(),
-      payout_reference: reference || `MANUAL-${Date.now()}`
+      payout_reference: reference || `MANUAL-${Date.now()}`,
     })
     .eq("id", commissionId)
     .select()
@@ -367,31 +387,37 @@ export async function adminGetDashboardStats() {
     .from("orders")
     .select("total_payment")
     .neq("status", "dibatalkan");
-  
+
   const { data: eventSales } = await supabase
     .from("event_orders")
     .select("total_payment")
     .neq("status", "dibatalkan");
 
-  const totalProductAmount = (productSales || []).reduce((sum, o) => sum + Number(o.total_payment), 0);
-  const totalEventAmount = (eventSales || []).reduce((sum, o) => sum + Number(o.total_payment), 0);
+  const totalProductAmount = (productSales || []).reduce(
+    (sum, o) => sum + Number(o.total_payment),
+    0,
+  );
+  const totalEventAmount = (eventSales || []).reduce(
+    (sum, o) => sum + Number(o.total_payment),
+    0,
+  );
   const totalPenjualan = totalProductAmount + totalEventAmount;
 
   // 2. Member Aktif
   const { count: activeMembers } = await supabase
     .from("memberships")
-    .select("*", { count: 'exact', head: true })
+    .select("*", { count: "exact", head: true })
     .eq("status", "active");
 
   // 3. Pesanan Baru (Status 'sedang_diproses')
   const { count: newProductOrders } = await supabase
     .from("orders")
-    .select("*", { count: 'exact', head: true })
+    .select("*", { count: "exact", head: true })
     .eq("status", "sedang_diproses");
 
   const { count: newEventOrders } = await supabase
     .from("event_orders")
-    .select("*", { count: 'exact', head: true })
+    .select("*", { count: "exact", head: true })
     .eq("status", "sedang_diproses");
 
   const pesananBaru = (newProductOrders || 0) + (newEventOrders || 0);
@@ -399,13 +425,13 @@ export async function adminGetDashboardStats() {
   // 4. Kursus Akademi (Active)
   const { count: totalCourses } = await supabase
     .from("courses")
-    .select("*", { count: 'exact', head: true })
+    .select("*", { count: "exact", head: true })
     .eq("is_active", true);
 
   return {
     totalPenjualan,
     activeMembers: activeMembers || 0,
     pesananBaru,
-    totalCourses: totalCourses || 0
+    totalCourses: totalCourses || 0,
   };
 }

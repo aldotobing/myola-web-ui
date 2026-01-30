@@ -51,8 +51,8 @@ export default function Navbar() {
     setIsLoggingOut(true);
     try {
       // Add a small artificial delay to let the sophisticated animation "breathe"
-      await new Promise(resolve => setTimeout(resolve, 1800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1800));
+
       await signOut();
       router.push("/");
       setIsLogoutModalOpen(false);
@@ -95,21 +95,23 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-12 absolute left-1/2 transform -translate-x-1/2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`transition-colors duration-200 text-base ${
-                  isActive(link.href)
-                    ? "text-pink-600 font-bold"
-                    : "text-gray-800 font-medium hover:text-pink-600"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
+          {!user || (user.role !== "admin" && user.role !== "sales") ? (
+            <div className="hidden lg:flex items-center space-x-12 absolute left-1/2 transform -translate-x-1/2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`transition-colors duration-200 text-base ${
+                    isActive(link.href)
+                      ? "text-pink-600 font-bold"
+                      : "text-gray-800 font-medium hover:text-pink-600"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+          ) : null}
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-3">
@@ -140,62 +142,106 @@ export default function Navbar() {
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl py-3 z-50 border border-gray-100 animate-in fade-in zoom-in duration-200">
                     <div className="px-6 py-4 border-b border-gray-100 mb-2">
-                      <p className="font-bold text-gray-900 truncate">{user.full_name}</p>
-                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      <p className="font-bold text-gray-900 truncate">
+                        {user.full_name}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.email}
+                      </p>
                       <div className="mt-3 flex items-center justify-between gap-2">
-                         <div className="flex flex-col gap-1">
-                            <span className="text-[10px] w-fit font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded uppercase">{user.role}</span>
-                            {user.memberUntil && (new Date(user.memberUntil).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000 && (
-                              <span className="text-[9px] font-black text-orange-600 animate-pulse">⚠️ SEGERA BERAKHIR</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] w-fit font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded uppercase">
+                            {user.role}
+                          </span>
+                          {user.memberUntil &&
+                            new Date(user.memberUntil).getTime() - Date.now() <
+                              7 * 24 * 60 * 60 * 1000 && (
+                              <span className="text-[9px] font-black text-orange-600 animate-pulse">
+                                ⚠️ SEGERA BERAKHIR
+                              </span>
                             )}
-                         </div>
-                         {user.role === 'member' && (
-                           <span className="text-xs font-bold text-gray-700">{user.points_balance?.toLocaleString()} Poin</span>
-                         )}
+                        </div>
+                        {user.role === "member" && (
+                          <span className="text-xs font-bold text-gray-700">
+                            {user.points_balance?.toLocaleString()} Poin
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {user.role === 'admin' && (
-                      <Link href="/dashboard/admin" onClick={() => setShowDropdown(false)} className="w-full text-left px-6 py-3 text-pink-600 hover:bg-pink-50 font-bold flex items-center gap-3 transition-colors">
+                    {user.role === "admin" && (
+                      <Link
+                        href="/dashboard/admin"
+                        onClick={() => setShowDropdown(false)}
+                        className="w-full text-left px-6 py-3 text-pink-600 hover:bg-pink-50 font-bold flex items-center gap-3 transition-colors"
+                      >
                         <LayoutDashboard size={18} /> Master Dashboard
                       </Link>
                     )}
 
-                    {user.role === 'sales' && (
-                      <Link href="/dashboard/sales" onClick={() => setShowDropdown(false)} className="w-full text-left px-6 py-3 text-blue-600 hover:bg-blue-50 font-bold flex items-center gap-3 transition-colors">
+                    {user.role === "sales" && (
+                      <Link
+                        href="/dashboard/sales"
+                        onClick={() => setShowDropdown(false)}
+                        className="w-full text-left px-6 py-3 text-blue-600 hover:bg-blue-50 font-bold flex items-center gap-3 transition-colors"
+                      >
                         <LayoutDashboard size={18} /> Sales Dashboard
                       </Link>
                     )}
 
-                    <button onClick={handleProfileClick} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
+                    <button
+                      onClick={handleProfileClick}
+                      className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors"
+                    >
                       <User size={18} /> Profil Saya
                     </button>
-                    
-                    {user.role === 'member' && (
+
+                    {user.role === "member" && (
                       <>
-                        <button onClick={() => { router.push("/dashboard/kelas"); setShowDropdown(false); }} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
+                        <button
+                          onClick={() => {
+                            router.push("/dashboard/kelas");
+                            setShowDropdown(false);
+                          }}
+                          className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors"
+                        >
                           <MonitorPlay size={18} /> Kelas Saya
                         </button>
-                        <button onClick={() => { router.push("/dashboard/pesanan"); setShowDropdown(false); }} className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors">
+                        <button
+                          onClick={() => {
+                            router.push("/dashboard/pesanan");
+                            setShowDropdown(false);
+                          }}
+                          className="w-full text-left px-6 py-3 text-gray-700 hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3 transition-colors"
+                        >
                           <ShoppingCart size={18} /> Pesanan Saya
                         </button>
                       </>
                     )}
 
                     <div className="border-t border-gray-100 my-2"></div>
-                    <button onClick={() => setIsLogoutModalOpen(true)} className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50 font-bold flex items-center gap-3 transition-colors">
+                    <button
+                      onClick={() => setIsLogoutModalOpen(true)}
+                      className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50 font-bold flex items-center gap-3 transition-colors"
+                    >
                       <LogOut size={18} /> Keluar
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <button onClick={handleLoginClick} className="p-2 hover:bg-gray-100 rounded-full transition-colors border border-gray-200">
+              <button
+                onClick={handleLoginClick}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors border border-gray-200"
+              >
                 <User className="w-6 h-6 text-gray-800 stroke-[1.5]" />
               </button>
             )}
 
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden p-2 hover:bg-gray-100 rounded-full">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-full"
+            >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
@@ -205,58 +251,92 @@ export default function Navbar() {
         {isMenuOpen && (
           <div className="lg:hidden py-6 border-t animate-in slide-in-from-top duration-300">
             <div className="flex flex-col space-y-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={`px-4 py-3 rounded-xl text-lg font-medium transition-colors ${isActive(link.href) ? "bg-pink-50 text-pink-600 font-bold" : "text-gray-800 hover:bg-gray-50"}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-
+              {!user || (user.role !== "admin" && user.role !== "sales") ? (
+                <>
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className={`px-4 py-3 rounded-xl text-lg font-medium transition-colors ${isActive(link.href) ? "bg-pink-50 text-pink-600 font-bold" : "text-gray-800 hover:bg-gray-50"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  ))}{" "}
+                </>
+              ) : null}
               {user ? (
                 <div className="pt-6 mt-4 border-t border-gray-100 space-y-2">
                   <div className="px-4 mb-4">
                     <p className="font-bold text-gray-900">{user.full_name}</p>
-                    <p className="text-sm text-gray-500 uppercase font-bold text-pink-600">{user.role}</p>
+                    <p className="text-sm text-gray-500 uppercase font-bold text-pink-600">
+                      {user.role}
+                    </p>
                   </div>
 
-                  {user.role === 'admin' && (
-                    <Link href="/dashboard/admin" onClick={() => setIsMenuOpen(false)} className="w-full text-left px-4 py-3 rounded-xl bg-pink-50 text-pink-600 font-bold flex items-center gap-3">
+                  {user.role === "admin" && (
+                    <Link
+                      href="/dashboard/admin"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full text-left px-4 py-3 rounded-xl bg-pink-50 text-pink-600 font-bold flex items-center gap-3"
+                    >
                       <LayoutDashboard size={20} /> Master Dashboard
                     </Link>
                   )}
 
-                  {user.role === 'sales' && (
-                    <Link href="/dashboard/sales" onClick={() => setIsMenuOpen(false)} className="w-full text-left px-4 py-3 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center gap-3">
+                  {user.role === "sales" && (
+                    <Link
+                      href="/dashboard/sales"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full text-left px-4 py-3 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center gap-3"
+                    >
                       <LayoutDashboard size={20} /> Sales Dashboard
                     </Link>
                   )}
 
-                  <button onClick={handleProfileClick} className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3">
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3"
+                  >
                     <User size={20} /> Profil Saya
                   </button>
 
-                  {user.role === 'member' && (
+                  {user.role === "member" && (
                     <>
-                      <button onClick={() => { router.push("/dashboard/kelas"); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          router.push("/dashboard/kelas");
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3"
+                      >
                         <MonitorPlay size={20} /> Kelas Saya
                       </button>
-                      <button onClick={() => { router.push("/dashboard/pesanan"); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          router.push("/dashboard/pesanan");
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 hover:text-pink-600 font-medium flex items-center gap-3"
+                      >
                         <ShoppingCart size={20} /> Pesanan Saya
                       </button>
                     </>
                   )}
-                  
+
                   <div className="border-t border-gray-100 my-2"></div>
-                  <button onClick={() => setIsLogoutModalOpen(true)} className="w-full text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-bold flex items-center gap-3">
+                  <button
+                    onClick={() => setIsLogoutModalOpen(true)}
+                    className="w-full text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-bold flex items-center gap-3"
+                  >
                     <LogOut size={20} /> Keluar
                   </button>
                 </div>
               ) : (
-                <button onClick={handleLoginClick} className="mt-6 mx-4 bg-pink-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-100">
+                <button
+                  onClick={handleLoginClick}
+                  className="mt-6 mx-4 bg-pink-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-100"
+                >
                   Login / Register
                 </button>
               )}
@@ -265,9 +345,9 @@ export default function Navbar() {
         )}
       </div>
 
-      <LogoutModal 
-        isOpen={isLogoutModalOpen} 
-        onClose={() => setIsLogoutModalOpen(false)} 
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={handleSignOut}
         isLoading={isLoggingOut}
       />

@@ -77,20 +77,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-gray-50">
+    <div className="min-h-screen py-12 px-4 bg-gray-50">
       <div className="max-w-2xl w-full mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Login Member
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Login
           </h1>
           <p className="text-gray-600 text-lg">
-            Mulai belajar jadi profesional!{" "}
-            <span className="text-pink-500 font-bold">
-              Bayar Rp99.000 per bulan
-            </span>{" "}
-            untuk akses akademi dan dapatkan cashback di setiap pembelian
-            produk!
+            Mulai belajar jadi profesional bersama
+            <span className="text-pink-500 font-bold">MyOLA</span>{" "}
           </p>
         </div>
 
