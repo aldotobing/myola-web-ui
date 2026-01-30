@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import {
   X,
   Upload,
@@ -240,11 +241,13 @@ export default function DeliveryConfirmationModal({
 
                 <div className="flex items-start gap-4">
                   {/* Image Preview */}
-                  <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-200 border border-gray-300">
-                    <img
+                  <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-200 border border-gray-300 relative">
+                    <Image
                       src={previewUrl}
                       alt="Preview"
-                      className="w-full h-full object-cover"
+                      fill
+                      unoptimized
+                      className="object-cover"
                     />
                   </div>
 
