@@ -11,6 +11,7 @@ import { getProductDetailBySlug, getAllProducts, ProductDetailData, ProductData 
 import ProductCard from "@/components/layout/productcard";
 import { useCart } from "@/app/contexts/CartContexts";
 import AddToCartToast from "@/components/cart/AddToCartToast";
+import { toast } from "sonner";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -31,6 +32,7 @@ export default function ProductDetailPage() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewComment, setReviewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,18 +98,45 @@ export default function ProductDetailPage() {
     router.push("/checkout");
   };
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!product) return;
+    
     if (selectedRating === 0 || !reviewTitle.trim() || !reviewComment.trim()) {
-      alert("Please fill in all fields");
+      toast.error("Silakan lengkapi semua data ulasan");
       return;
     }
-    setShowSuccessAlert(true);
-    setShowReviewModal(false);
-    setSelectedRating(0);
-    setReviewTitle("");
-    setReviewComment("");
-    setTimeout(() => setShowSuccessAlert(false), 3000);
+
+    setIsSubmittingReview(true);
+    try {
+      const response = await fetch("/api/member/products/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          rating: selectedRating,
+          title: reviewTitle,
+          comment: reviewComment
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Gagal mengirim ulasan");
+
+      toast.success("Terima kasih! Ulasan Anda telah berhasil disimpan.");
+      setShowReviewModal(false);
+      setSelectedRating(0);
+      setReviewTitle("");
+      setReviewComment("");
+      
+      // Refresh product data to show new review
+      const updatedDetail = await getProductDetailBySlug(productSlug);
+      setProduct(updatedDetail);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   return (
@@ -291,7 +320,10 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="flex gap-4 pt-4">
                    <button type="button" onClick={() => setShowReviewModal(false)} className="flex-1 py-3 border-2 border-gray-100 rounded-xl font-bold text-gray-600 hover:bg-gray-50">Batal</button>
-                   <button type="submit" className="flex-1 py-3 bg-pink-500 text-white rounded-xl font-bold hover:bg-pink-600 shadow-lg shadow-pink-100">Kirim Review</button>
+                   <button type="submit" disabled={isSubmittingReview} className="flex-1 py-3 bg-pink-500 text-white rounded-xl font-bold hover:bg-pink-600 shadow-lg shadow-pink-100 disabled:bg-gray-300 flex items-center justify-center gap-2">
+                     {isSubmittingReview && <Loader2 className="w-5 h-5 animate-spin" />}
+                     {isSubmittingReview ? "Mengirim..." : "Kirim Review"}
+                   </button>
                 </div>
              </form>
            </div>

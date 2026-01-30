@@ -1,7 +1,9 @@
 /** @format */
 
 import { Address, AddressFormData } from "@/types/address";
-import { createClient as getSupabase } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 /**
  * Get all addresses for a user
@@ -9,8 +11,6 @@ import { createClient as getSupabase } from "@/utils/supabase/client";
 export async function getUserAddresses(
   userId?: string
 ): Promise<Address[]> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -25,6 +25,7 @@ export async function getUserAddresses(
     .order("created_at", { ascending: false });
 
   if (error) {
+    if (error.message?.includes('AbortError')) return [];
     console.error("Error fetching addresses:", error);
     return [];
   }
@@ -49,8 +50,6 @@ export async function getAddressById(
   addressId: string,
   userId?: string
 ): Promise<Address | null> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -62,9 +61,12 @@ export async function getAddressById(
     .select("*")
     .eq("id", addressId)
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
 
-  if (error || !addr) return null;
+  if (error || !addr) {
+    if (error?.message?.includes('AbortError')) return null;
+    return null;
+  }
 
   return {
     id: addr.id,
@@ -85,8 +87,6 @@ export async function getAddressById(
 export async function getPrimaryAddress(
   userId?: string
 ): Promise<Address | null> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -98,9 +98,12 @@ export async function getPrimaryAddress(
     .select("*")
     .eq("user_id", userId)
     .eq("is_primary", true)
-    .single();
+    .maybeSingle();
 
-  if (error || !addr) return null;
+  if (error || !addr) {
+    if (error?.message?.includes('AbortError')) return null;
+    return null;
+  }
 
   return {
     id: addr.id,
@@ -122,8 +125,6 @@ export async function createAddress(
   data: AddressFormData,
   userId?: string
 ): Promise<{ success: boolean; address?: Address; error?: string }> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Unauthorized" };
@@ -131,12 +132,8 @@ export async function createAddress(
   }
 
   try {
-    // If setting as primary, unset other primary addresses
     if (data.isPrimary) {
-      await supabase
-        .from("addresses")
-        .update({ is_primary: false })
-        .eq("user_id", userId);
+      await supabase.from("addresses").update({ is_primary: false }).eq("user_id", userId);
     }
 
     const { data: newAddr, error } = await supabase
@@ -170,6 +167,7 @@ export async function createAddress(
       },
     };
   } catch (error: any) {
+    if (error.message?.includes('AbortError')) return { success: false };
     console.error("Error creating address:", error);
     return { success: false, error: error.message };
   }
@@ -183,8 +181,6 @@ export async function updateAddress(
   data: AddressFormData,
   userId?: string
 ): Promise<{ success: boolean; address?: Address; error?: string }> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Unauthorized" };
@@ -192,12 +188,8 @@ export async function updateAddress(
   }
 
   try {
-    // If setting as primary, unset other primary addresses
     if (data.isPrimary) {
-      await supabase
-        .from("addresses")
-        .update({ is_primary: false })
-        .eq("user_id", userId);
+      await supabase.from("addresses").update({ is_primary: false }).eq("user_id", userId);
     }
 
     const { data: updatedAddr, error } = await supabase
@@ -232,6 +224,7 @@ export async function updateAddress(
       },
     };
   } catch (error: any) {
+    if (error.message?.includes('AbortError')) return { success: false };
     console.error("Error updating address:", error);
     return { success: false, error: error.message };
   }
@@ -244,8 +237,6 @@ export async function deleteAddress(
   addressId: string,
   userId?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Unauthorized" };
@@ -253,37 +244,20 @@ export async function deleteAddress(
   }
 
   try {
-    // Check if it's the primary address
-    const { data: addr } = await supabase
-      .from("addresses")
-      .select("is_primary")
-      .eq("id", addressId)
-      .single();
+    const { data: addr } = await supabase.from("addresses").select("is_primary").eq("id", addressId).maybeSingle();
 
     if (addr?.is_primary) {
-      const { count } = await supabase
-        .from("addresses")
-        .select("*", { count: 'exact', head: true })
-        .eq("user_id", userId);
-      
+      const { count } = await supabase.from("addresses").select("*", { count: 'exact', head: true }).eq("user_id", userId);
       if (count && count > 1) {
-        return {
-          success: false,
-          error: "Cannot delete primary address. Please set another address as primary first.",
-        };
+        return { success: false, error: "Cannot delete primary address." };
       }
     }
 
-    const { error } = await supabase
-      .from("addresses")
-      .delete()
-      .eq("id", addressId)
-      .eq("user_id", userId);
-
+    const { error } = await supabase.from("addresses").delete().eq("id", addressId).eq("user_id", userId);
     if (error) throw error;
-
     return { success: true };
   } catch (error: any) {
+    if (error.message?.includes('AbortError')) return { success: false };
     console.error("Error deleting address:", error);
     return { success: false, error: error.message };
   }
@@ -296,8 +270,6 @@ export async function setPrimaryAddress(
   addressId: string,
   userId?: string
 ): Promise<{ success: boolean; address?: Address; error?: string }> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Unauthorized" };
@@ -305,23 +277,9 @@ export async function setPrimaryAddress(
   }
 
   try {
-    // Unset all primary addresses
-    await supabase
-      .from("addresses")
-      .update({ is_primary: false })
-      .eq("user_id", userId);
-
-    // Set new primary
-    const { data: updatedAddr, error } = await supabase
-      .from("addresses")
-      .update({ is_primary: true })
-      .eq("id", addressId)
-      .eq("user_id", userId)
-      .select()
-      .single();
-
+    await supabase.from("addresses").update({ is_primary: false }).eq("user_id", userId);
+    const { data: updatedAddr, error } = await supabase.from("addresses").update({ is_primary: true }).eq("id", addressId).eq("user_id", userId).select().single();
     if (error) throw error;
-
     return {
       success: true,
       address: {
@@ -337,6 +295,7 @@ export async function setPrimaryAddress(
       },
     };
   } catch (error: any) {
+    if (error.message?.includes('AbortError')) return { success: false };
     console.error("Error setting primary address:", error);
     return { success: false, error: error.message };
   }
@@ -348,19 +307,13 @@ export async function setPrimaryAddress(
 export async function getAddressCount(
   userId?: string
 ): Promise<number> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return 0;
     userId = user.id;
   }
 
-  const { count, error } = await supabase
-    .from("addresses")
-    .select("*", { count: 'exact', head: true })
-    .eq("user_id", userId);
-
+  const { count, error } = await supabase.from("addresses").select("*", { count: 'exact', head: true }).eq("user_id", userId);
   if (error) return 0;
   return count || 0;
 }

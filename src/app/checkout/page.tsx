@@ -14,14 +14,15 @@ import AddressFormModal from "@/components/addresses/AddressFormModal";
 import { createAddress } from "@/lib/service/member/addresses";
 import { AddressFormData } from "@/types/address";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuth();
 
   // User status checks
-  const isLoggedIn = !!user || false;
-  const isMember = isLoggedIn && isMemberActive(user?.memberUntil);
+  const isLoggedIn = !!user;
+  const isMember = isLoggedIn && (isMemberActive(user?.memberUntil) || user?.role === 'admin');
 
   // Feature eligibility based on user status
   const isEligibleCashback = isMember; // Only active members get cashback
@@ -81,13 +82,13 @@ export default function CheckoutPage() {
         await loadAddresses();
         setSelectedAddress(result.address);
         setShowAddressModal(false);
-        alert("Alamat berhasil ditambahkan!");
+        toast.success("Alamat berhasil ditambahkan!");
       } else {
-        alert(result.error || "Gagal menambahkan alamat");
+        toast.error(result.error || "Gagal menambahkan alamat");
       }
     } catch (error) {
       console.error("Error adding address:", error);
-      alert("Terjadi kesalahan. Silakan coba lagi.");
+      toast.error("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setAddressModalLoading(false);
     }
@@ -127,13 +128,13 @@ export default function CheckoutPage() {
       !selectedAddress.phoneNumber ||
       !selectedAddress.fullAddress
     ) {
-      alert("Silakan lengkapi informasi pengiriman");
+      toast.error("Silakan lengkapi informasi pengiriman");
       return;
     }
 
     const phoneDigits = selectedAddress.phoneNumber.replace(/\D/g, "");
     if (phoneDigits.length < 10) {
-      alert("Nomor HP minimal 10 digit");
+      toast.error("Nomor HP minimal 10 digit");
       return;
     }
 
@@ -178,7 +179,7 @@ export default function CheckoutPage() {
       // 3. Redirect to payment selection
       router.push("/payment/select");
     } catch (error: any) {
-      alert("Gagal memproses pesanan: " + error.message);
+      toast.error("Gagal memproses pesanan: " + error.message);
     } finally {
       setLoading(false);
     }

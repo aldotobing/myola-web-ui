@@ -153,6 +153,18 @@ export async function adminGetCourses() {
   return data;
 }
 
+export async function adminGetCourseById(id: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function adminCreateCourse(course: any) {
   const supabase = getSupabase();
   const slug = slugify(course.title);
@@ -167,6 +179,42 @@ export async function adminCreateCourse(course: any) {
     })
     .select()
     .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminUpdateCourse(id: string, updates: any) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("courses")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminDeleteCourse(id: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("courses")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function adminGetLessons(courseId: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("*")
+    .eq("course_id", courseId)
+    .order("sort_order", { ascending: true });
 
   if (error) throw error;
   return data;
@@ -189,8 +237,57 @@ export async function adminCreateLesson(lesson: any) {
   return data;
 }
 
+export async function adminUpdateLesson(id: string, updates: any) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("lessons")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminDeleteLesson(id: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("lessons")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function adminGetVideoModules(lessonId: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("video_modules")
+    .select("*")
+    .eq("lesson_id", lessonId)
+    .order("sort_order", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminGetVideoModuleById(id: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("video_modules")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function adminCreateVideoModule(module: any) {
   const supabase = getSupabase();
+  
   const { data, error } = await supabase
     .from("video_modules")
     .insert({
@@ -202,6 +299,33 @@ export async function adminCreateVideoModule(module: any) {
 
   if (error) throw error;
   return data;
+}
+
+export async function adminUpdateVideoModule(id: string, updates: any) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("video_modules")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminDeleteVideoModule(id: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("video_modules")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+  return true;
 }
 
 // =============================================================================
@@ -308,6 +432,41 @@ export async function adminGetMembers() {
   }));
 }
 
+export async function adminUpdateMemberPoints(userId: string, points: number, reason: string) {
+  const supabase = getSupabase();
+  
+  // 1. Get current balance
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("points_balance")
+    .eq("user_id", userId)
+    .single();
+
+  const oldBalance = profile?.points_balance || 0;
+  const newBalance = points; // We are setting the absolute value here, or we could do offset. Let's do absolute for admin control.
+
+  // 2. Update profile
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ points_balance: newBalance })
+    .eq("user_id", userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // 3. Log transaction
+  await supabase.from("point_transactions").insert({
+    user_id: userId,
+    transaction_type: 'admin_adjustment',
+    amount: newBalance - oldBalance,
+    balance_after: newBalance,
+    description: reason || "Penyesuaian oleh Admin"
+  });
+
+  return data;
+}
+
 export async function adminGetSales() {
   const supabase = getSupabase();
 
@@ -372,6 +531,23 @@ export async function adminApproveCommission(
       payout_reference: reference || `MANUAL-${Date.now()}`,
     })
     .eq("id", commissionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminUpdateMembershipStatus(userId: string, status: string) {
+  const supabase = getSupabase();
+  
+  const { data, error } = await supabase
+    .from("memberships")
+    .update({ 
+      status,
+      updated_at: new Date().toISOString()
+    })
+    .eq("user_id", userId)
     .select()
     .single();
 

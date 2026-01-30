@@ -1,6 +1,44 @@
+import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { NextResponse } from 'next/server'
 
+/**
+ * GET: Used by Admin to fetch a signed URL for a KTP image
+ */
+export async function GET(request: Request) {
+  try {
+    const supabase = await createClient()
+    const { data: { user: requester } } = await supabase.auth.getUser()
+    if (!requester) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Verify Admin role
+    const { data: profile } = await supabase.from('profiles').select('role').eq('user_id', requester.id).single()
+    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { searchParams } = new URL(request.url)
+    const path = searchParams.get('path')
+
+    if (!path) return NextResponse.json({ error: 'Path is required' }, { status: 400 })
+
+    const adminClient = createAdminClient()
+    
+    // Create signed URL (1 hour expiry)
+    const { data, error } = await adminClient.storage
+      .from('myola')
+      .createSignedUrl(path, 3600)
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true, url: data.signedUrl })
+  } catch (error: any) {
+    console.error('KTP Signed URL error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+/**
+ * POST: Used during registration to upload KTP
+ */
 export async function POST(request: Request) {
   try {
     const adminClient = createAdminClient()

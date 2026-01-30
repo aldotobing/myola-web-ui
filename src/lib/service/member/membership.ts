@@ -1,8 +1,10 @@
-import { createClient as getSupabase } from "@/utils/supabase/client";
+/** @format */
+
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 export async function getMembership(userId?: string) {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -18,6 +20,7 @@ export async function getMembership(userId?: string) {
     .maybeSingle();
 
   if (error) {
+    if (error.message?.includes('AbortError')) return null;
     console.error("Error fetching membership:", error);
     return null;
   }
@@ -26,18 +29,18 @@ export async function getMembership(userId?: string) {
 }
 
 export async function updateProfile(userId: string, data: any) {
-  const supabase = getSupabase();
-
   const { error } = await supabase
     .from("profiles")
     .update({
       full_name: data.fullName,
       phone: data.phone,
       ktp_number: data.idNumber,
-      // Add other fields if you have them in the schema
     })
     .eq("user_id", userId);
 
-  if (error) throw error;
+  if (error) {
+    if (error.message?.includes('AbortError')) return { success: false };
+    throw error;
+  }
   return { success: true };
 }

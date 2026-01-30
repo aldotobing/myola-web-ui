@@ -1,7 +1,9 @@
 /** @format */
 
-import { Order, OrderItem, OrderStatus } from "@/types/order";
-import { createClient as getSupabase } from "@/utils/supabase/client";
+import { Order, OrderStatus } from "@/types/order";
+import { createClient } from "@/utils/supabase/client";
+
+const supabase = createClient();
 
 const getStatusText = (status: OrderStatus) => {
   switch (status) {
@@ -20,8 +22,6 @@ const getStatusText = (status: OrderStatus) => {
  * Get all orders for the current user
  */
 export async function getAllOrders(userId?: string): Promise<Order[]> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -38,6 +38,7 @@ export async function getAllOrders(userId?: string): Promise<Order[]> {
     .order("created_at", { ascending: false });
 
   if (error) {
+    if (error.message?.includes('AbortError')) return [];
     console.error("Error fetching orders:", error);
     return [];
   }
@@ -92,8 +93,6 @@ export async function getOrderByNumber(
   orderNumber: string,
   userId?: string
 ): Promise<Order | null> {
-  const supabase = getSupabase();
-
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -108,9 +107,10 @@ export async function getOrderByNumber(
     `)
     .eq("order_number", orderNumber)
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
 
   if (error || !order) {
+    if (error?.message?.includes('AbortError')) return null;
     console.error("Error fetching order:", error);
     return null;
   }
@@ -165,8 +165,6 @@ export async function confirmOrderDelivery(
   orderNumber: string,
   photoFile?: File
 ): Promise<{ success: boolean; order?: Order; error?: string }> {
-  const supabase = getSupabase();
-  
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
@@ -206,6 +204,7 @@ export async function confirmOrderDelivery(
     const updatedOrder = await getOrderByNumber(orderNumber, user.id);
     return { success: true, order: updatedOrder || undefined };
   } catch (error: any) {
+    if (error.message?.includes('AbortError')) return { success: false };
     console.error("Error confirming delivery:", error);
     return { success: false, error: error.message };
   }

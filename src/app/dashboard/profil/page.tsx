@@ -22,15 +22,21 @@ import {
   User2Icon,
   Loader2,
   Upload,
+  Eye,
+  EyeOff,
+  Lock,
+  User,
+  ShieldCheck,
+  CheckCircle2
 } from "lucide-react";
 import Image from "next/image";
 import { getMembership, updateProfile } from "@/lib/service/member/membership";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
   const { user, signOut, refreshProfile } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [membership, setMembership] = useState<any>(null);
@@ -38,9 +44,6 @@ export default function ProfilePage() {
   
   const [formData, setFormData] = useState({
     fullName: "",
-    gender: "",
-    birthPlace: "",
-    birthDate: "",
     email: "",
     phone: "",
     idNumber: "",
@@ -48,83 +51,53 @@ export default function ProfilePage() {
 
   const [preview, setPreview] = useState<string | null>(null);
   const [ktpUrl, setKtpUrl] = useState<string | null>(null);
+  const [showKtpImage, setShowKtpImage] = useState(false);
+  const [isIdVisible, setIsIdVisible] = useState(false);
 
   useEffect(() => {
     if (user) {
       setFormData({
         fullName: user.full_name || "",
-        gender: "", // Add to schema if needed
-        birthPlace: "", // Add to schema if needed
-        birthDate: "", // Add to schema if needed
         email: user.email || "",
         phone: user.phone || "",
         idNumber: user.ktp_number || "",
       });
 
-      // Fetch membership info
       getMembership(user.id).then(data => setMembership(data));
       
-      // If has KTP image, get a secure Signed URL
       if (user.ktp_image_url) {
         const getSignedUrl = async () => {
           const { data, error } = await supabase.storage
             .from('myola')
-            .createSignedUrl(user.ktp_image_url!, 3600); // URL valid for 1 hour
-          
-          if (error) {
-            console.error("Error creating signed URL:", error.message, "Path:", user.ktp_image_url);
-            return;
-          }
-
-          if (data) {
-            setKtpUrl(data.signedUrl);
-          }
+            .createSignedUrl(user.ktp_image_url!, 3600);
+          if (data) setKtpUrl(data.signedUrl);
         };
         getSignedUrl();
       }
     }
   }, [user, supabase]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
-
+    if (!file) return;
     if (!file.type.startsWith("image/")) {
-      alert("File harus berupa gambar");
+      toast.error("File harus berupa gambar");
       return;
     }
-
-    // Preview locally
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
-
-    // Upload immediately or wait for submit? Let's do it on submit for consistency
+    setPreview(URL.createObjectURL(file));
   };
 
-  useEffect(() => {
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    
     setIsSaving(true);
 
     try {
-      // 1. If new KTP file selected, upload it
       let finalKtpPath = user.ktp_image_url;
       const fileInput = document.getElementById('ktp-upload') as HTMLInputElement;
       const file = fileInput?.files?.[0];
@@ -133,54 +106,38 @@ export default function ProfilePage() {
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         const filePath = `ktp/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('myola')
-          .upload(filePath, file);
-
+        const { error: uploadError } = await supabase.storage.from('myola').upload(filePath, file);
         if (uploadError) throw uploadError;
         finalKtpPath = filePath;
       }
 
-      // 2. Update profile in database
-      await updateProfile(user.id, {
-        ...formData,
-        ktp_image_url: finalKtpPath
-      });
-
+      await updateProfile(user.id, { ...formData, ktp_image_url: finalKtpPath });
       await refreshProfile();
-      alert("Profil berhasil diperbarui!");
+      toast.success("Profil berhasil diperbarui!");
     } catch (error: any) {
-      console.error("Update error:", error);
-      alert("Gagal memperbarui profil: " + error.message);
+      toast.error("Gagal memperbarui profil: " + error.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handlesignOut = async () => {
-    await signOut();
-    router.push("/");
-  };
-
-  const handleMenuClick = (href: string) => {
-    router.push(href);
-    setShowMobileMenu(false);
-  };
-
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const menuItems = [
-    { icon: FileText, label: "Profile", href: "/dashboard/profil", color: "text-pink-500" },
-    { icon: Coins, label: "Poin MYOLA", href: "/dashboard/poin-myola", color: "text-pink-500" },
-    { icon: ShoppingCart, label: "Pesanan Saya", href: "/dashboard/pesanan", color: "text-pink-500" },
-    { icon: MonitorPlayIcon, label: "Kelas Saya", href: "/dashboard/kelas", color: "text-pink-500" },
-    { icon: Megaphone, label: "Event Saya", href: "/dashboard/event", color: "text-pink-500" },
-    { icon: MapIcon, label: "Alamat Pengiriman", href: "/dashboard/alamat", color: "text-pink-500" },
-    { icon: Settings2Icon, label: "Pengaturan Akun", href: "/dashboard/pengaturan-akun", color: "text-pink-500" },
+    { icon: FileText, label: "Profile", href: "/dashboard/profil" },
+    { icon: Coins, label: "Poin MYOLA", href: "/dashboard/poin-myola" },
+    { icon: ShoppingCart, label: "Pesanan Saya", href: "/dashboard/pesanan" },
+    { icon: MonitorPlayIcon, label: "Kelas Saya", href: "/dashboard/kelas" },
+    { icon: Megaphone, label: "Event Saya", href: "/dashboard/event" },
+    { icon: MapIcon, label: "Alamat Pengiriman", href: "/dashboard/alamat" },
+    { icon: Settings2Icon, label: "Pengaturan Akun", href: "/dashboard/pengaturan-akun" },
   ];
+
+  const maskIdNumber = (id: string) => {
+    if (!id) return "-";
+    if (isIdVisible) return id;
+    return id.slice(0, 4) + " •••• •••• " + id.slice(-4);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -188,10 +145,7 @@ export default function ProfilePage() {
       <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="flex justify-between items-center h-16 px-4">
           <h1 className="text-lg font-bold text-gray-900">Akun</h1>
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
+          <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="p-2 hover:bg-gray-100 rounded-lg">
             {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -210,10 +164,10 @@ export default function ProfilePage() {
           {menuItems.map((item, idx) => (
             <button
               key={idx}
-              onClick={() => handleMenuClick(item.href)}
+              onClick={() => { router.push(item.href); setShowMobileMenu(false); }}
               className="w-full flex items-center gap-3 px-4 py-3 border-b hover:bg-gray-50 transition-colors text-left"
             >
-              <item.icon className={`w-5 h-5 ${item.color} flex-shrink-0`} />
+              <item.icon className="w-5 h-5 text-pink-500 flex-shrink-0" />
               <span className="flex-1 font-medium text-gray-800 text-sm">{item.label}</span>
             </button>
           ))}
@@ -223,7 +177,7 @@ export default function ProfilePage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Desktop Sidebar */}
+          {/* Desktop Sidebar - Matching poin-myola theme */}
           <div className="hidden md:block md:col-span-1">
             <div className="bg-pink-50 rounded-2xl p-6 sticky top-24">
               <div className="flex items-center gap-4 mb-6">
@@ -232,9 +186,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-gray-900 truncate">{user.full_name}</h3>
-                  <span className="inline-block bg-pink-500 text-white text-xs px-3 py-1 rounded-full mt-1">
-                    {user.points_balance?.toLocaleString() || "0"} poin
-                  </span>
+                  <span className="inline-block bg-pink-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase mt-1">Member</span>
                 </div>
               </div>
 
@@ -245,30 +197,25 @@ export default function ProfilePage() {
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                       item.href === "/dashboard/profil" 
-                        ? "bg-white text-pink-600" 
+                        ? "bg-white text-pink-600 shadow-sm" 
                         : "text-gray-700 hover:bg-white hover:text-pink-600"
                     }`}
                   >
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <item.icon size={18} className="flex-shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 ))}
-                <button
-                  onClick={handlesignOut}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-white font-medium transition-colors mt-4"
-                >
-                  <X className="w-5 h-5 flex-shrink-0" />
-                  <span>Keluar</span>
-                </button>
               </nav>
             </div>
           </div>
 
-          {/* Profile Form Area */}
-          <div className="md:col-span-3">
-            <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-6">Profil</h2>
+          {/* Main Content Area */}
+          <div className="lg:col-span-3">
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-xl md:text-3xl font-bold text-gray-900">Profil Saya</p>
+            </div>
 
-            {/* Membership Expiry Banner */}
+            {/* Membership Expiry Banner - Restored to Original Design */}
             <div className={`border rounded-xl mb-8 px-6 py-4 flex items-center justify-between ${
               membership?.expires_at && (new Date(membership.expires_at).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000
                 ? "bg-orange-50 border-orange-200"
@@ -284,7 +231,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <p className="text-gray-600 text-xs">
-                    Berakhir pada: {membership?.expires_at ? new Date(membership.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : (membership ? "Lifetime" : "-")}
+                    Berakhir pada: {membership?.expires_at ? new Date(membership.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : (membership?.status === 'active' ? "Selamanya" : "-")}
                   </p>
                 </div>
               </div>
@@ -294,87 +241,97 @@ export default function ProfilePage() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-pink-500 transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      disabled
-                      className="w-full px-4 py-3 border-2 border-gray-50 bg-gray-50 rounded-xl text-gray-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">No. HP</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-pink-500 transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nomor KTP</label>
-                    <input
-                      type="text"
-                      name="idNumber"
-                      value={formData.idNumber}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-pink-500 transition-colors"
-                    />
+              <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b pb-4">
+                    <User size={20} className="text-pink-500" /> Informasi Dasar
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
+                      <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nomor WhatsApp</label>
+                      <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none transition-all" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Alamat Email</label>
+                      <input type="email" value={formData.email} disabled className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed" />
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Foto KTP</label>
-                  <label
-                    htmlFor="ktp-upload"
-                    className="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-pink-500 transition-colors cursor-pointer block bg-gray-50"
-                  >
-                    {preview || ktpUrl ? (
-                      <div className="relative w-full h-48">
-                        <Image src={preview || ktpUrl || ""} alt="KTP" fill className="object-contain" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
-                          <p className="text-white font-bold bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm">Ganti Foto</p>
+                <div className="space-y-6 pt-4">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b pb-4">
+                    <ShieldCheck size={20} className="text-blue-500" /> Verifikasi Identitas
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nomor KTP (NIK)</label>
+                      <div className="relative">
+                        <input 
+                          type="text" 
+                          name="idNumber" 
+                          value={isIdVisible ? formData.idNumber : maskIdNumber(formData.idNumber)} 
+                          onChange={handleInputChange} 
+                          readOnly={!isIdVisible}
+                          className={`w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all font-mono tracking-wider ${isIdVisible ? 'text-gray-900 focus:border-pink-500' : 'text-gray-400'}`} 
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => setIsIdVisible(!isIdVisible)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-white rounded-lg transition-all text-gray-400"
+                        >
+                          {isIdVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      <p className="mt-2 text-[10px] text-gray-400 font-medium">Klik ikon mata untuk mengedit nomor KTP</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Foto Dokumen KTP</label>
+                      {(preview || ktpUrl) ? (
+                        <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 h-48 flex items-center justify-center relative group">
+                          {showKtpImage ? (
+                            <>
+                              <Image src={preview || ktpUrl || ""} alt="KTP" fill className="object-contain" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <button type="button" onClick={() => setShowKtpImage(false)} className="bg-white text-gray-900 px-4 py-2 rounded-lg font-bold text-xs shadow-lg">Sembunyikan</button>
+                                <label htmlFor="ktp-upload" className="bg-pink-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg cursor-pointer">Ganti</label>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-center">
+                              <div className="bg-pink-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Eye size={20} className="text-pink-500" />
+                              </div>
+                              <button type="button" onClick={() => setShowKtpImage(true)} className="bg-pink-500 text-white px-6 py-2 rounded-lg font-bold text-xs hover:bg-pink-600 transition-all">Lihat Foto</button>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="text-sm text-gray-500">Klik untuk upload foto KTP baru</p>
-                      </div>
-                    )}
-                  </label>
-                  <input id="ktp-upload" type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                      ) : (
+                        <label htmlFor="ktp-upload" className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-pink-500 transition-all cursor-pointer block bg-gray-50">
+                          <Upload className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                          <p className="text-xs text-gray-500 font-medium">Upload Foto KTP</p>
+                        </label>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-gray-100">
+                <div className="pt-6 border-t flex justify-end">
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="bg-pink-500 hover:bg-pink-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-pink-200 transition-all disabled:bg-gray-400 flex items-center gap-2"
+                    className="w-full md:w-auto bg-pink-500 hover:bg-pink-600 text-white px-10 py-3.5 rounded-xl font-bold shadow-lg shadow-pink-100 transition-all disabled:bg-gray-300 flex items-center justify-center gap-2"
                   >
-                    {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 size={20} />}
                     {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
                   </button>
                 </div>
               </form>
+              <input id="ktp-upload" type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
           </div>
         </div>

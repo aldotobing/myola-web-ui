@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { adminGetCommissionReports } from "@/lib/service/admin/admin-service";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function AdminCommissionsPage() {
   const { user } = useAuth();
@@ -59,10 +60,10 @@ export default function AdminCommissionsPage() {
 
       if (!response.ok) throw new Error("Gagal memproses pembayaran");
 
-      alert("Komisi berhasil ditandai sebagai PAID");
+      toast.success("Komisi berhasil ditandai sebagai PAID");
       await fetchCommissions();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setApprovingId(null);
     }

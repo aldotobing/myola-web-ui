@@ -16,6 +16,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function CreateSalesPage() {
   const router = useRouter();
@@ -43,10 +44,10 @@ export default function CreateSalesPage() {
 
       if (!response.ok) throw new Error(result.error || "Gagal membuat akun sales");
 
-      alert("Akun Sales berhasil dibuat!");
+      toast.success("Akun Sales berhasil dibuat!");
       router.push("/dashboard/admin/users");
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }

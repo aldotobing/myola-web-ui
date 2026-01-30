@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
 export default function JoinMemberPage() {
   const router = useRouter();
@@ -137,7 +138,7 @@ export default function JoinMemberPage() {
         // 4. Redirect to payment
         router.push("/payment/select");
       } catch (error: any) {
-        setErrors({ general: error.message });
+        toast.error(error.message);
         setIsLoading(false);
       }
     } else {

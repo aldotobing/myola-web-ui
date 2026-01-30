@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/app/contexts/AuthContexts";
 import { useRouter } from "next/navigation";
 import { 
@@ -20,35 +20,33 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { adminGetDashboardStats } from "@/lib/service/admin/admin-service";
+import useSWR from 'swr';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<any>(null);
 
+  // Protect route
   useEffect(() => {
     if (user && user.role !== 'admin') {
       router.push('/dashboard');
-      return;
     }
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const data = await adminGetDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching admin stats:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (user) fetchData();
   }, [user, router]);
 
-  if (isLoading) {
+  // Use SWR for Resilient Fetching
+  // Key: 'admin-stats'
+  // Fetcher: adminGetDashboardStats
+  const { data: stats, error, isLoading } = useSWR(
+    user?.role === 'admin' ? 'admin-stats' : null, 
+    adminGetDashboardStats,
+    {
+      revalidateOnFocus: true, // "Wakes up" when browser is opened
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
+    }
+  );
+
+  if (isLoading && !stats) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-12 h-12 text-pink-500 animate-spin" />
@@ -117,6 +115,12 @@ export default function AdminDashboard() {
           </button>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl font-bold text-center border border-red-100">
+            Koneksi terputus. Mencoba memuat ulang data...
+          </div>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {statsConfig.map((stat, i) => (
@@ -129,7 +133,7 @@ export default function AdminDashboard() {
               </div>
               <p className="text-2xl font-black text-gray-900">{stat.value}</p>
               <div className="mt-2 flex items-center text-green-600 text-[10px] font-bold uppercase tracking-wider">
-                <TrendingUp size={12} className="mr-1" /> Real-time data
+                <TrendingUp size={12} className="mr-1" /> Smart-Sync Active
               </div>
             </div>
           ))}

@@ -25,50 +25,31 @@ import { Order, OrderStatus } from "@/types/order";
 import { ChevronDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAllOrders } from "@/lib/service/member/pesanan";
+import useSWR from "swr";
 
 export default function PesananPage() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-
-  //Orders State
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<OrderStatus | "semua">("semua");
 
-  useEffect(() => {
-    const loadOrders = async () => {
-      setLoading(true);
-      try {
-        const result = await getAllOrders();
-        setOrders(result);
-      } catch (error) {
-        console.error("Error loading orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadOrders();
-  }, []);
+  // Use SWR for Resilient Fetching
+  const { data: orders = [], isLoading: loading } = useSWR(
+    user ? ['user-orders', user.id] : null,
+    () => getAllOrders(user?.id)
+  );
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = (orders as Order[]).filter((order) => {
     if (activeFilter === "semua") return true;
     return order.status === activeFilter;
   });
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/");
-  };
 
   const handleMenuClick = (href: string) => {
     router.push(href);
     setShowMobileMenu(false);
   };
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const menuItems = [
     { icon: FileText, label: "Profile", href: "/dashboard/profil" },
@@ -165,7 +146,7 @@ export default function PesananPage() {
               </TabsList>
 
               <TabsContent value={activeFilter} className="mt-0">
-                {loading ? (
+                {loading && orders.length === 0 ? (
                   <div className="py-20 text-center"><Loader2 className="w-10 h-10 animate-spin text-pink-500 mx-auto" /></div>
                 ) : filteredOrders.length > 0 ? (
                   <div className="space-y-4">

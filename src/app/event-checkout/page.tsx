@@ -34,7 +34,7 @@ function EventCheckoutContent() {
   const { user } = useAuth();
 
   const isLoggedIn = !!user;
-  const isMember = isLoggedIn && isMemberActive(user?.memberUntil);
+  const isMember = isLoggedIn && (isMemberActive(user?.memberUntil) || user?.role === 'admin');
 
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
