@@ -31,12 +31,14 @@ export default function PesananPage() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<OrderStatus | "semua">("semua");
+  const [activeFilter, setActiveFilter] = useState<OrderStatus | "semua">(
+    "semua",
+  );
 
   // Use SWR for Resilient Fetching
   const { data: orders = [], isLoading: loading } = useSWR(
-    user ? ['user-orders', user.id] : null,
-    () => getAllOrders(user?.id)
+    user ? ["user-orders", user.id] : null,
+    () => getAllOrders(user?.id),
   );
 
   const filteredOrders = (orders as Order[]).filter((order) => {
@@ -58,7 +60,11 @@ export default function PesananPage() {
     { icon: MonitorPlayIcon, label: "Kelas Saya", href: "/dashboard/kelas" },
     { icon: Megaphone, label: "Event Saya", href: "/dashboard/event" },
     { icon: MapIcon, label: "Alamat Pengiriman", href: "/dashboard/alamat" },
-    { icon: Settings2Icon, label: "Pengaturan Akun", href: "/dashboard/pengaturan-akun" },
+    {
+      icon: Settings2Icon,
+      label: "Pengaturan Akun",
+      href: "/dashboard/pengaturan-akun",
+    },
   ];
 
   return (
@@ -67,7 +73,10 @@ export default function PesananPage() {
       <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="flex justify-between items-center h-16 px-4">
           <h1 className="text-lg font-bold text-gray-900">Pesanan Saya</h1>
-          <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="p-2">
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="p-2"
+          >
             {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -80,7 +89,9 @@ export default function PesananPage() {
             <Wallet className="w-5 h-5 text-pink-600" />
             <div>
               <p className="text-xs text-gray-600">Poin </p>
-              <p className="font-bold text-gray-900">{user.points_balance?.toLocaleString() || "0"}</p>
+              <p className="font-bold text-gray-900">
+                {user.points_balance?.toLocaleString() || "0"}
+              </p>
             </div>
           </div>
           {menuItems.map((item, idx) => (
@@ -90,7 +101,9 @@ export default function PesananPage() {
               className="w-full flex items-center gap-3 px-4 py-3 border-b hover:bg-gray-50 text-left"
             >
               <item.icon size={18} className="text-pink-500" />
-              <span className="font-medium text-gray-800 text-sm">{item.label}</span>
+              <span className="font-medium text-gray-800 text-sm">
+                {item.label}
+              </span>
             </button>
           ))}
         </div>
@@ -107,8 +120,12 @@ export default function PesananPage() {
                   {user.full_name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-gray-900 truncate">{user.full_name}</h3>
-                  <span className="inline-block bg-pink-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">Member</span>
+                  <h3 className="font-bold text-gray-900 truncate">
+                    {user.full_name}
+                  </h3>
+                  <span className="inline-block bg-pink-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">
+                    Member
+                  </span>
                 </div>
               </div>
 
@@ -118,8 +135,8 @@ export default function PesananPage() {
                     key={idx}
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                      item.href === "/dashboard/pesanan" 
-                        ? "bg-white text-pink-600 shadow-sm" 
+                      item.href === "/dashboard/pesanan"
+                        ? "bg-white text-pink-600 shadow-sm"
                         : "text-gray-700 hover:bg-white hover:text-pink-600"
                     }`}
                   >
@@ -134,20 +151,48 @@ export default function PesananPage() {
           {/* Main Content Area */}
           <div className="lg:col-span-3">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Pesanan Saya</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Pesanan Saya
+              </h2>
             </div>
 
-            <Tabs defaultValue="semua" className="w-full" onValueChange={(value) => setActiveFilter(value as any)}>
-              <TabsList className="bg-white p-1 rounded-2xl border border-gray-100 mb-6 inline-flex overflow-x-auto w-full justify-start md:w-auto">
-                <TabsTrigger value="semua" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Semua</TabsTrigger>
-                <TabsTrigger value="sedang_diproses" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap">Sedang Diproses</TabsTrigger>
-                <TabsTrigger value="sedang_dikirim" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap">Sedang Dikirim</TabsTrigger>
-                <TabsTrigger value="selesai" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Selesai</TabsTrigger>
+            <Tabs
+              defaultValue="semua"
+              className="w-full"
+              onValueChange={(value) => setActiveFilter(value as any)}
+            >
+              <TabsList className="bg-transparent p-0 h-auto flex w-full overflow-x-auto overflow-y-hidden no-scrollbar justify-start space-x-2 pb-2">
+                <TabsTrigger
+                  value="semua"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                >
+                  Semua
+                </TabsTrigger>
+                <TabsTrigger
+                  value="sedang_diproses"
+                  className="bg-pink-50 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap"
+                >
+                  Sedang Diproses
+                </TabsTrigger>
+                <TabsTrigger
+                  value="sedang_dikirim"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap"
+                >
+                  Sedang Dikirim
+                </TabsTrigger>
+                <TabsTrigger
+                  value="selesai"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                >
+                  Selesai
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value={activeFilter} className="mt-0">
+              <TabsContent value={activeFilter} className="mt-4">
                 {loading && orders.length === 0 ? (
-                  <div className="py-20 text-center"><Loader2 className="w-10 h-10 animate-spin text-pink-500 mx-auto" /></div>
+                  <div className="py-20 text-center">
+                    <Loader2 className="w-10 h-10 animate-spin text-pink-500 mx-auto" />
+                  </div>
                 ) : filteredOrders.length > 0 ? (
                   <div className="space-y-4">
                     {filteredOrders.map((order) => (
@@ -156,10 +201,20 @@ export default function PesananPage() {
                   </div>
                 ) : (
                   <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
-                    <ShoppingCart size={48} className="mx-auto text-gray-200 mb-4" />
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Belum ada pesanan</h3>
-                    <p className="text-gray-500">Mulai belanja produk favorit Anda sekarang!</p>
-                    <Link href="/store" className="inline-block mt-6 px-8 py-3 bg-pink-500 text-white font-bold rounded-xl shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all">
+                    <ShoppingCart
+                      size={48}
+                      className="mx-auto text-gray-200 mb-4"
+                    />
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      Belum ada pesanan
+                    </h3>
+                    <p className="text-gray-500">
+                      Mulai belanja produk favorit Anda sekarang!
+                    </p>
+                    <Link
+                      href="/store"
+                      className="inline-block mt-6 px-8 py-3 bg-pink-500 text-white font-bold rounded-xl shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all"
+                    >
                       Buka Toko
                     </Link>
                   </div>

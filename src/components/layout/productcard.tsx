@@ -76,7 +76,7 @@ export default function ProductCard({
   };
 
   const cardContent = (
-    <div className="bg-white rounded-lg md:rounded-2xl lg:rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex-shrink-0 w-full">
+    <div className="bg-gradient-to-b  from-[#F8F8FF] to-[#FFFFFF] rounded-lg md:rounded-2xl lg:rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex-shrink-0 w-full">
       {/* Rating Badge */}
       <div className="relative p-4 pb-0">
         <div className="absolute top-8 left-2 md:left-4 lg:left-4 z-10 bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-1">
@@ -88,7 +88,7 @@ export default function ProductCard({
       </div>
 
       {/* Product Image */}
-      <div className="relative rounded-lg md:rounded-2xl lg:rounded-2xl  h-48 md:h-72 lg:h-72 bg-gradient-to-b  from-[#F8F8FF] to-[#FFFFFF] px-8 pt-8 pb-4">
+      <div className="relative rounded-lg md:rounded-2xl lg:rounded-2xl  h-48 md:h-72 lg:h-72 bg-gradient-to-b  from-[#F8F8FF] to-[#F8F8FF] px-8 pt-8 pb-4">
         <div className="relative h-56 md:h-64 lg:h-64 w-full">
           <Image
             src={image}

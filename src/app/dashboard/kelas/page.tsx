@@ -146,10 +146,25 @@ export default function KelasPage() {
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Kelas Saya</h2>
 
             <Tabs defaultValue="not_started" className="w-full">
-              <TabsList className="bg-white p-1 rounded-2xl border border-gray-100 mb-6 flex overflow-x-auto w-full justify-start md:w-auto">
-                <TabsTrigger value="not_started" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Belum Mulai</TabsTrigger>
-                <TabsTrigger value="in_progress" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap">Sedang Berlangsung</TabsTrigger>
-                <TabsTrigger value="completed" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Selesai</TabsTrigger>
+              <TabsList className="bg-transparent p-0 h-auto flex w-full overflow-x-auto overflow-y-hidden no-scrollbar justify-start space-x-2 pb-2">
+                <TabsTrigger
+                  value="not_started"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                >
+                  Belum Mulai
+                </TabsTrigger>
+                <TabsTrigger
+                  value="in_progress"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap"
+                >
+                  Sedang Berlangsung
+                </TabsTrigger>
+                <TabsTrigger
+                  value="completed"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                >
+                  Selesai
+                </TabsTrigger>
               </TabsList>
 
               {["not_started", "in_progress", "completed"].map((status) => (

@@ -51,7 +51,7 @@ export default function LessonCard({
 
         {/* Title Overlay */}
         <div className="absolute bottom-4 left-4 right-4">
-          <p className="text-white font-bold text-lg mb-2 line-clamp-2">
+          <p className="text-white font-bold text-lg sm:text-xl md:text-2xl mb-2 line-clamp-2">
             {title}
           </p>
           <p className="text-white/90 text-sm">{videoCount} Videos</p>
@@ -61,7 +61,9 @@ export default function LessonCard({
       {/* Duration & Lock Status */}
       <div className="p-4 pt-4">
         <div className="flex items-center justify-between">
-          <div className="text-lg font-semibold text-gray-500">{duration}</div>
+          <div className="text-lg font-semibold text-gray-500">
+            {duration} minutes
+          </div>
           <button className="bg-[#FDF2F7] hover:bg-[#FDE6F0] text-pink-500 p-3 rounded-full transition-colors duration-200 shadow-md hover:shadow-lg">
             <ShoppingBag className="w-5 h-5" />
           </button>
@@ -76,8 +78,6 @@ export default function LessonCard({
   }
 
   return (
-    <Link href={`/akademi/${courseSlug}/lesson/${slug}`}>
-      {cardContent}
-    </Link>
+    <Link href={`/akademi/${courseSlug}/lesson/${slug}`}>{cardContent}</Link>
   );
 }
