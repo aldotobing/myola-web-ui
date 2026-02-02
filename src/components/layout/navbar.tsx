@@ -85,7 +85,13 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <Image
-                src="/logo.png"
+                src={
+                  user?.role === "admin"
+                    ? "/Admin.png"
+                    : user?.role === "sales"
+                      ? "/Sales.png"
+                      : "/logo.png"
+                }
                 alt="MyOLA Logo"
                 width={120}
                 height={40}
@@ -115,18 +121,20 @@ export default function Navbar() {
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-3">
-            <Link
-              href="/cart"
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
-              aria-label="Shopping cart"
-            >
-              <ShoppingBag className="w-6 h-6 text-gray-800 stroke-[1.5]" />
-              {cart.totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.totalItems}
-                </span>
-              )}
-            </Link>
+            {(!user || (user.role !== "admin" && user.role !== "sales")) && (
+              <Link
+                href="/cart"
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Shopping cart"
+              >
+                <ShoppingBag className="w-6 h-6 text-gray-800 stroke-[1.5]" />
+                {cart.totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {cart.totalItems}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {user ? (
               <div className="relative">

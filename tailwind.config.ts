@@ -6,6 +6,10 @@ const config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      fontFamily: {
+        "libre-baskerville": ["var(--font-libre-baskerville)"],
+        montserrat: ["var(--font-montserrat)"],
+      },
       colors: {
         border: "hsl(var(--border))",
         ring: "hsl(var(--ring))",
