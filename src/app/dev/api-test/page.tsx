@@ -76,19 +76,35 @@ export default function ApiTestPage() {
           label: "Get All Products",
           method: "GET",
           path: "SERVICE:adminGetProducts",
-          description: "Fetch all products with categories and images (use returned IDs for other tests)"
+          description: "Fetch all products with categories and images"
+        },
+        {
+          label: "Get Product by ID",
+          method: "GET",
+          path: "SERVICE:adminGetProductById:PRODUCT_UUID_HERE",
+          description: "Fetch specific product details by ID",
+          requiresId: true,
+          idPlaceholder: "PRODUCT_UUID_HERE"
         },
         {
           label: "Get All Categories",
           method: "GET",
           path: "SERVICE:adminGetCategories",
-          description: "Fetch all product categories (use returned IDs for other tests)"
+          description: "Fetch all product categories"
+        },
+        {
+          label: "Get Category by ID",
+          method: "GET",
+          path: "SERVICE:adminGetCategoryById:CATEGORY_UUID_HERE",
+          description: "Fetch specific category details by ID",
+          requiresId: true,
+          idPlaceholder: "CATEGORY_UUID_HERE"
         },
         {
           label: "Get All Courses",
           method: "GET",
           path: "SERVICE:adminGetCourses",
-          description: "Fetch all academy courses (use returned IDs for other tests)"
+          description: "Fetch all academy courses"
         },
         {
           label: "Get Course by ID",
@@ -148,7 +164,7 @@ export default function ApiTestPage() {
           label: "Get Dashboard Stats",
           method: "GET",
           path: "SERVICE:adminGetDashboardStats",
-          description: "Fetch dashboard statistics (sales, members, orders, courses)"
+          description: "Fetch dashboard statistics"
         },
       ]
     },
@@ -156,12 +172,6 @@ export default function ApiTestPage() {
       group: "Admin: Products & Categories",
       description: "Manage products, categories, and inventory",
       endpoints: [
-        {
-          label: "Get All Products",
-          method: "GET",
-          path: "/api/admin/products",
-          description: "Fetch all products with their details"
-        },
         {
           label: "Create Product",
           method: "POST",
@@ -197,12 +207,6 @@ export default function ApiTestPage() {
           description: "Delete a product by ID",
           requiresId: true,
           idPlaceholder: "PRODUCT_UUID_HERE"
-        },
-        {
-          label: "Get All Categories",
-          method: "GET",
-          path: "/api/admin/categories",
-          description: "Fetch all product categories"
         },
         {
           label: "Create Category",
@@ -346,7 +350,7 @@ export default function ApiTestPage() {
           label: "Update Member Status",
           method: "POST",
           path: "/api/admin/members/update-status",
-          description: "Update membership status (active, suspended, cancelled)",
+          description: "Update membership status",
           body: JSON.stringify({
             userId: "USER_UUID_HERE",
             status: "active"
@@ -391,8 +395,8 @@ export default function ApiTestPage() {
           label: "Upload File",
           method: "POST",
           path: "/api/admin/upload",
-          description: "Upload file to Supabase Storage (use FormData with 'file' and 'folder' fields)",
-          body: "// Use FormData in your application:\n// const formData = new FormData();\n// formData.append('file', fileInput.files[0]);\n// formData.append('folder', 'products'); // or 'courses', 'misc', etc."
+          description: "Upload file to Supabase Storage (use FormData)",
+          body: "// Use FormData in your application:\n// const formData = new FormData();\n// formData.append('file', fileInput.files[0]);\n// formData.append('folder', 'products');"
         },
       ]
     },
@@ -421,7 +425,7 @@ export default function ApiTestPage() {
           label: "Upload KTP",
           method: "POST",
           path: "/api/member/upload-ktp",
-          description: "Upload KTP image during registration (use FormData)",
+          description: "Upload KTP image during registration",
           body: "// Use FormData:\n// const formData = new FormData();\n// formData.append('file', ktpFile);\n// formData.append('userId', 'USER_UUID_HERE');"
         },
         {
@@ -571,20 +575,20 @@ export default function ApiTestPage() {
   // 2. Guest Guard
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4 text-center">
-        <div className="bg-[#1E293B] p-12 rounded-[48px] max-w-md w-full border border-gray-800 shadow-2xl">
-          <div className="w-20 h-20 bg-pink-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
-            <Lock className="text-pink-500" size={40} />
+      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-6">
+        <div className="bg-[#1E293B] p-10 rounded-3xl max-w-md w-full border border-gray-800 shadow-2xl">
+          <div className="w-16 h-16 bg-pink-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Lock className="text-pink-500" size={32} />
           </div>
-          <h2 className="text-3xl font-black text-white mb-4 tracking-tight">Access Restricted</h2>
-          <p className="text-gray-500 mb-10 leading-relaxed font-medium">
-            This laboratory requires <span className="text-pink-500 font-bold underline">Administrator</span> authorization to prevent unauthorized data exposure.
+          <h2 className="text-2xl font-bold text-white mb-3 text-center">Access Restricted</h2>
+          <p className="text-gray-400 mb-8 text-center text-sm leading-relaxed">
+            This laboratory requires <span className="text-pink-500 font-semibold">Administrator</span> authorization.
           </p>
           <button
             onClick={() => router.push("/auth/login?redirect=/dev/api-test")}
-            className="w-full py-5 bg-pink-600 hover:bg-pink-500 text-white font-black rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-pink-900/30 active:scale-95"
+            className="w-full py-3.5 bg-pink-600 hover:bg-pink-500 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-pink-900/30 active:scale-[0.98]"
           >
-            <LogIn size={20} /> Login as Admin
+            <LogIn size={18} /> Login as Admin
           </button>
         </div>
       </div>
@@ -594,25 +598,25 @@ export default function ApiTestPage() {
   // 3. Admin Role Guard
   if (user.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4 text-center">
-        <div className="bg-[#1E293B] p-12 rounded-[48px] max-w-md w-full border border-gray-800 shadow-2xl">
-          <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
-            <ShieldAlert className="text-red-500" size={40} />
+      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-6">
+        <div className="bg-[#1E293B] p-10 rounded-3xl max-w-md w-full border border-gray-800 shadow-2xl">
+          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <ShieldAlert className="text-red-500" size={32} />
           </div>
-          <h2 className="text-3xl font-black text-white mb-4 tracking-tight">Unauthorized</h2>
-          <p className="text-gray-500 mb-10 leading-relaxed font-medium">
-            Your account role (<span className="text-white font-bold">{user.role}</span>) does not have sufficient permissions to access the API Lab.
+          <h2 className="text-2xl font-bold text-white mb-3 text-center">Unauthorized</h2>
+          <p className="text-gray-400 mb-8 text-center text-sm leading-relaxed">
+            Your account role (<span className="text-white font-semibold">{user.role}</span>) does not have sufficient permissions.
           </p>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <button
               onClick={() => router.push("/dashboard")}
-              className="w-full py-4 bg-gray-800 hover:bg-gray-700 text-white font-black rounded-2xl transition-all"
+              className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all"
             >
               Back to Dashboard
             </button>
             <button
               onClick={() => signOut().then(() => router.push("/auth/login?redirect=/dev/api-test"))}
-              className="text-pink-500 font-bold text-sm hover:underline"
+              className="text-pink-500 font-medium text-sm hover:underline w-full"
             >
               Switch Account
             </button>
@@ -724,55 +728,64 @@ export default function ApiTestPage() {
   })).filter(group => group.endpoints.length > 0);
 
   return (
-    <div className="flex h-screen bg-[#0F172A] text-gray-300 font-mono overflow-hidden animate-in fade-in duration-500">
+    <div className="flex h-screen bg-[#0F172A] text-gray-300 overflow-hidden">
       {/* Sidebar */}
-      <div className="w-96 bg-[#1E293B] border-r border-gray-800 flex flex-col shadow-2xl">
-        <div className="p-6 border-b border-gray-800">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+      <div className="w-[400px] bg-[#1E293B] border-r border-gray-800 flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="p-5 border-b border-gray-800 bg-[#1E293B]">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2.5">
               <div className="p-2 bg-pink-500 rounded-lg shadow-lg shadow-pink-900/20">
-                <Zap size={20} className="text-white fill-white" />
+                <Zap size={18} className="text-white fill-white" />
               </div>
-              <h1 className="font-black text-white tracking-tighter text-lg">MYOLA API LAB</h1>
+              <h1 className="font-bold text-white text-base tracking-tight">MYOLA API LAB</h1>
             </div>
-            <div className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-[9px] font-black border border-green-500/20">CONNECTED</div>
+            <div className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-[10px] font-bold border border-green-500/20">
+              CONNECTED
+            </div>
           </div>
+
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
             <input
               type="text"
               placeholder="Search APIs..."
-              className="w-full bg-[#0F172A] border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-xs outline-none focus:border-pink-500 transition-all text-white font-bold"
+              className="w-full bg-[#0F172A] border border-gray-700 rounded-lg pl-9 pr-3 py-2.5 text-xs outline-none focus:border-pink-500 transition-colors text-white placeholder:text-gray-600"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="mt-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+
+          {/* Info Banner */}
+          <div className="mt-3 p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-lg">
             <div className="flex items-start gap-2">
-              <Database size={14} className="text-blue-400 mt-0.5 flex-shrink-0" />
-              <p className="text-[9px] text-blue-400 leading-relaxed font-medium">
-                <span className="font-black">Data Fetching (GET)</span> endpoints call service layer functions directly to query the database. Use these to get IDs for testing other endpoints.
+              <Database size={12} className="text-blue-400 mt-0.5 flex-shrink-0" />
+              <p className="text-[10px] text-blue-400 leading-relaxed">
+                <span className="font-semibold">Data Fetching</span> endpoints query the database directly. Use these to get IDs for testing.
               </p>
             </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+
+        {/* API List */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
           {filteredCollections.map((group, idx) => (
-            <div key={idx} className="bg-[#0F172A]/50 rounded-2xl border border-gray-800/50 overflow-hidden">
+            <div key={idx} className="bg-[#0F172A]/50 rounded-xl border border-gray-800/50 overflow-hidden">
               <button
                 onClick={() => toggleGroup(group.group)}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#1E293B]/50 transition-all"
+                className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-[#1E293B]/50 transition-colors"
               >
                 <div className="flex-1 text-left">
-                  <h3 className="text-[11px] font-black text-white uppercase tracking-wider">{group.group}</h3>
+                  <h3 className="text-[11px] font-bold text-white uppercase tracking-wide">{group.group}</h3>
                   {group.description && (
-                    <p className="text-[9px] text-gray-500 mt-1 font-medium">{group.description}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">{group.description}</p>
                   )}
                 </div>
                 {expandedGroups.has(group.group) ? (
-                  <ChevronDown size={16} className="text-gray-500" />
+                  <ChevronDown size={14} className="text-gray-500 flex-shrink-0 ml-2" />
                 ) : (
-                  <ChevronRight size={16} className="text-gray-500" />
+                  <ChevronRight size={14} className="text-gray-500 flex-shrink-0 ml-2" />
                 )}
               </button>
               {expandedGroups.has(group.group) && (
@@ -781,18 +794,18 @@ export default function ApiTestPage() {
                     <button
                       key={i}
                       onClick={() => selectEndpoint(item)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#1E293B] transition-all group flex flex-col gap-2 ${endpoint === item.path ? 'bg-[#1E293B] border border-pink-500/30' : 'border border-transparent'}`}
+                      className={`w-full text-left px-2.5 py-2 rounded-lg hover:bg-[#1E293B] transition-colors group flex flex-col gap-1.5 ${endpoint === item.path ? 'bg-[#1E293B] border border-pink-500/30' : 'border border-transparent'}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[9px] font-black w-12 px-1 rounded flex items-center justify-center h-5 ${item.method === 'GET' ? 'bg-green-500/10 text-green-400' :
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] font-bold w-11 px-1.5 rounded flex items-center justify-center h-4 flex-shrink-0 ${item.method === 'GET' ? 'bg-green-500/10 text-green-400' :
                           item.method === 'POST' ? 'bg-blue-500/10 text-blue-400' :
                             item.method === 'PATCH' ? 'bg-orange-500/10 text-orange-400' :
                               'bg-red-500/10 text-red-400'
                           }`}>{item.method}</span>
-                        <span className={`text-[11px] font-bold flex-1 ${endpoint === item.path ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>{item.label}</span>
+                        <span className={`text-[11px] font-medium flex-1 leading-tight ${endpoint === item.path ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>{item.label}</span>
                       </div>
                       {item.description && (
-                        <p className="text-[9px] text-gray-600 leading-relaxed pl-[3.75rem]">{item.description}</p>
+                        <p className="text-[9px] text-gray-600 leading-relaxed pl-[3.25rem]">{item.description}</p>
                       )}
                     </button>
                   ))}
@@ -801,16 +814,18 @@ export default function ApiTestPage() {
             </div>
           ))}
         </div>
-        <div className="p-4 bg-[#0F172A]/50 border-t border-gray-800">
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#1E293B] border border-gray-800">
-            <div className="w-10 h-10 rounded-xl bg-pink-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-pink-900/20">
+
+        {/* User Profile */}
+        <div className="p-3 bg-[#0F172A]/50 border-t border-gray-800">
+          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#1E293B] border border-gray-800">
+            <div className="w-9 h-9 rounded-lg bg-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-pink-900/20">
               {user?.full_name?.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-white truncate uppercase tracking-tight">{user?.full_name}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
+              <p className="text-[11px] font-bold text-white truncate">{user?.full_name}</p>
+              <div className="flex items-center gap-1 mt-0.5">
                 <ShieldCheck size={10} className="text-pink-500" />
-                <span className="text-[9px] text-pink-500 uppercase font-black tracking-widest">{user?.role}</span>
+                <span className="text-[9px] text-pink-500 uppercase font-bold tracking-wider">{user?.role}</span>
               </div>
             </div>
           </div>
@@ -819,13 +834,13 @@ export default function ApiTestPage() {
 
       {/* Main Panel */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* URL Bar Area */}
-        <div className="p-10 border-b border-gray-800 bg-[#1E293B]/20">
-          <div className="flex gap-4 max-w-5xl mx-auto">
+        {/* URL Bar */}
+        <div className="p-6 border-b border-gray-800 bg-[#1E293B]/20">
+          <div className="flex gap-3 max-w-6xl mx-auto">
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="bg-[#0F172A] border border-gray-700 rounded-2xl px-8 py-4 text-pink-500 font-black text-sm outline-none focus:border-pink-500 shadow-2xl transition-all cursor-pointer hover:border-pink-500/50 appearance-none text-center"
+              className="bg-[#0F172A] border border-gray-700 rounded-xl px-6 py-3 text-pink-500 font-bold text-sm outline-none focus:border-pink-500 shadow-lg transition-colors cursor-pointer hover:border-pink-500/50"
             >
               <option>GET</option>
               <option>POST</option>
@@ -833,23 +848,23 @@ export default function ApiTestPage() {
               <option>DELETE</option>
             </select>
             <div className="flex-1 relative group">
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 text-gray-600 group-focus-within:text-pink-500 transition-colors">
-                <Globe size={16} />
-                <span className="text-[10px] font-black tracking-tighter opacity-50">LOCALHOST:3000</span>
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-600 group-focus-within:text-pink-500 transition-colors pointer-events-none">
+                <Globe size={14} />
+                <span className="text-[10px] font-bold tracking-tight opacity-50">LOCALHOST:3000</span>
               </div>
               <input
                 type="text"
                 value={endpoint}
                 onChange={(e) => setEndpoint(e.target.value)}
-                className="w-full h-full bg-[#0F172A] border border-gray-700 rounded-2xl pl-44 pr-6 outline-none focus:border-pink-500 text-white font-bold text-sm shadow-2xl transition-all font-mono"
+                className="w-full h-full bg-[#0F172A] border border-gray-700 rounded-xl pl-36 pr-4 outline-none focus:border-pink-500 text-white font-medium text-sm shadow-lg transition-colors"
               />
             </div>
             <button
               onClick={handleSend}
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-black px-12 py-4 rounded-2xl shadow-2xl shadow-blue-900/40 transition-all flex items-center gap-3 active:scale-95 disabled:bg-gray-700 disabled:shadow-none hover:-translate-y-0.5"
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-10 py-3 rounded-xl shadow-lg shadow-blue-900/40 transition-all flex items-center gap-2 active:scale-[0.98] disabled:bg-gray-700 disabled:shadow-none disabled:cursor-not-allowed"
             >
-              {isLoading ? <Loader2 className="animate-spin" size={24} /> : <Send size={24} />}
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
               SEND
             </button>
           </div>
@@ -857,13 +872,13 @@ export default function ApiTestPage() {
 
         {/* Builder Tabs */}
         <div className="flex-1 flex flex-col min-h-0 bg-[#0F172A]/30">
-          <div className="px-10 border-b border-gray-800 bg-[#1E293B]/10">
-            <div className="flex gap-12">
+          <div className="px-6 border-b border-gray-800 bg-[#1E293B]/10">
+            <div className="flex gap-8">
               {["params", "authorization", "headers", "body"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                  className={`py-6 text-[10px] font-black uppercase tracking-[0.3em] border-b-4 transition-all ${activeTab === tab ? 'border-pink-500 text-white translate-y-0.5' : 'border-transparent text-gray-600 hover:text-gray-300'}`}
+                  className={`py-4 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all ${activeTab === tab ? 'border-pink-500 text-white' : 'border-transparent text-gray-600 hover:text-gray-300'}`}
                 >
                   {tab}
                 </button>
@@ -871,68 +886,71 @@ export default function ApiTestPage() {
             </div>
           </div>
 
-          <div className="flex-1 p-10 overflow-auto custom-scrollbar">
-            <div className="max-w-5xl mx-auto h-full">
+          <div className="flex-1 p-6 overflow-auto custom-scrollbar">
+            <div className="max-w-6xl mx-auto h-full">
               {activeTab === 'body' && (
                 <textarea
                   value={requestBody}
                   onChange={(e) => setRequestBody(e.target.value)}
                   placeholder='// Enter JSON request body here...'
-                  className="w-full h-full bg-transparent border-none outline-none text-blue-400 font-mono text-sm resize-none custom-scrollbar leading-relaxed"
+                  className="w-full h-full bg-transparent border-none outline-none text-blue-400 text-sm resize-none custom-scrollbar leading-relaxed font-mono"
                 />
               )}
               {activeTab === 'authorization' && (
-                <div className="space-y-8">
-                  <div className="p-8 bg-blue-500/5 border border-blue-500/20 rounded-[32px] flex items-start gap-6">
-                    <div className="p-4 bg-blue-500/10 rounded-2xl text-blue-400 shadow-inner">
-                      <Key size={32} />
+                <div className="space-y-6">
+                  <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex items-start gap-4">
+                    <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                      <Key size={24} />
                     </div>
                     <div>
-                      <p className="text-sm font-black text-blue-400 uppercase tracking-widest mb-2">Bearer Token Authentication</p>
-                      <p className="text-sm text-gray-500 leading-relaxed max-w-2xl font-medium">
-                        Protected routes in MyOLA require a valid Supabase JWT. This token is automatically refreshed and injected into your headers for all requests.
+                      <p className="text-sm font-bold text-blue-400 uppercase tracking-wide mb-1.5">Bearer Token Authentication</p>
+                      <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">
+                        Protected routes require a valid Supabase JWT. This token is automatically refreshed and injected into your headers.
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                      <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Active Access Token</label>
-                      <div className="flex gap-4">
-                        <button onClick={() => { navigator.clipboard.writeText(token); toast.info("Token copied"); }} className="text-[10px] text-pink-500 font-black flex items-center gap-2 hover:bg-pink-500/10 px-3 py-1.5 rounded-lg transition-all"><Copy size={14} /> COPY TOKEN</button>
-                      </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Active Access Token</label>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(token); toast.info("Token copied"); }}
+                        className="text-[10px] text-pink-500 font-bold flex items-center gap-1.5 hover:bg-pink-500/10 px-2.5 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Copy size={12} /> COPY
+                      </button>
                     </div>
                     <textarea
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
-                      className="w-full bg-[#0F172A] border border-gray-700 rounded-3xl p-8 text-[11px] text-gray-500 outline-none focus:border-pink-500 font-mono resize-none leading-relaxed shadow-inner"
+                      className="w-full bg-[#0F172A] border border-gray-700 rounded-2xl p-6 text-[11px] text-gray-500 outline-none focus:border-pink-500 font-mono resize-none leading-relaxed shadow-inner"
                       rows={10}
                     />
                   </div>
                 </div>
               )}
               {activeTab === 'headers' && (
-                <div className="space-y-4">
-                  <div className="flex gap-6 text-[10px] font-black text-gray-600 uppercase mb-6 px-4">
-                    <span className="w-48">Header Key</span>
+                <div className="space-y-3">
+                  <div className="flex gap-4 text-[10px] font-bold text-gray-600 uppercase mb-4 px-2">
+                    <span className="w-44">Header Key</span>
                     <span>Value</span>
                   </div>
                   {[
                     { k: "Content-Type", v: "application/json" },
                     { k: "Authorization", v: `Bearer ${token.slice(0, 40)}...` }
                   ].map((h, i) => (
-                    <div key={i} className="flex gap-6 items-center">
-                      <input readOnly value={h.k} className="w-48 bg-[#1E293B]/50 border border-gray-800 rounded-2xl px-6 py-4 text-xs text-pink-500 font-black" />
-                      <input readOnly value={h.v} className="flex-1 bg-[#1E293B]/50 border border-gray-800 rounded-2xl px-6 py-4 text-xs text-gray-500 truncate font-mono" />
+                    <div key={i} className="flex gap-4 items-center">
+                      <input readOnly value={h.k} className="w-44 bg-[#1E293B]/50 border border-gray-800 rounded-xl px-4 py-3 text-xs text-pink-500 font-bold" />
+                      <input readOnly value={h.v} className="flex-1 bg-[#1E293B]/50 border border-gray-800 rounded-xl px-4 py-3 text-xs text-gray-500 truncate font-mono" />
                     </div>
                   ))}
                 </div>
               )}
               {activeTab === 'params' && (
                 <div className="h-full flex flex-col items-center justify-center text-gray-700/50">
-                  <Layout size={80} className="mb-8 opacity-5" />
-                  <p className="text-lg font-black uppercase tracking-[0.3em]">Query Parameters</p>
-                  <p className="text-sm mt-3 italic font-medium">Modify URL params directly in the endpoint bar above.</p>
-                  <p className="text-xs mt-2 text-gray-600">Example: /api/admin/products?id=UUID_HERE</p>
+                  <Layout size={64} className="mb-6 opacity-5" />
+                  <p className="text-base font-bold uppercase tracking-wider">Query Parameters</p>
+                  <p className="text-sm mt-2 text-gray-600">Modify URL params directly in the endpoint bar above.</p>
+                  <p className="text-xs mt-1.5 text-gray-700">Example: /api/admin/products?id=UUID_HERE</p>
                 </div>
               )}
             </div>
@@ -940,22 +958,22 @@ export default function ApiTestPage() {
         </div>
 
         {/* Response Panel */}
-        <div className="h-[350px] bg-[#0F172A] border-t border-gray-800 flex flex-col shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.5)]">
-          <div className="px-10 py-5 border-b border-gray-800 flex items-center justify-between bg-[#1E293B]/10">
-            <div className="flex items-center gap-12">
-              <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">Server Response</h2>
+        <div className="h-[500px] bg-[#0F172A] border-t border-gray-800 flex flex-col shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.5)]">
+          <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between bg-[#1E293B]/10">
+            <div className="flex items-center gap-8">
+              <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Server Response</h2>
               {status && (
-                <div className="flex gap-10 items-center">
-                  <div className={`px-6 py-2 rounded-xl text-[11px] font-black shadow-2xl ${status < 300 ? 'bg-green-500 text-white shadow-green-900/20' : 'bg-red-500 text-white shadow-red-900/20'}`}>
-                    STATUS: {status}
+                <div className="flex gap-6 items-center">
+                  <div className={`px-4 py-1.5 rounded-lg text-[11px] font-bold shadow-lg ${status < 300 ? 'bg-green-500 text-white shadow-green-900/20' : 'bg-red-500 text-white shadow-red-900/20'}`}>
+                    {status}
                   </div>
-                  <div className="flex items-center gap-2.5 text-gray-500">
-                    <Clock size={14} />
-                    <span className="text-[11px] font-black uppercase tracking-widest">{response?.time}</span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Clock size={12} />
+                    <span className="text-[11px] font-bold uppercase tracking-wide">{response?.time}</span>
                   </div>
-                  <div className="flex items-center gap-2.5 text-gray-500">
-                    <Database size={14} />
-                    <span className="text-[11px] font-black uppercase tracking-widest">{response?.size}</span>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Database size={12} />
+                    <span className="text-[11px] font-bold uppercase tracking-wide">{response?.size}</span>
                   </div>
                 </div>
               )}
@@ -963,28 +981,28 @@ export default function ApiTestPage() {
             {response && (
               <button
                 onClick={() => { navigator.clipboard.writeText(JSON.stringify(response.data, null, 2)); toast.info("JSON response copied"); }}
-                className="text-[10px] font-black text-pink-500 hover:text-white hover:bg-pink-500 transition-all px-6 py-2.5 rounded-xl border-2 border-pink-500/30 uppercase tracking-widest"
+                className="text-[10px] font-bold text-pink-500 hover:text-white hover:bg-pink-500 transition-all px-4 py-2 rounded-lg border border-pink-500/30 uppercase tracking-wide"
               >
-                Copy Raw JSON
+                Copy JSON
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-auto p-10 custom-scrollbar bg-[#020617]/50">
+          <div className="flex-1 overflow-auto p-6 custom-scrollbar bg-[#020617]/50">
             {isLoading ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-600 gap-6">
-                <Loader2 className="animate-spin text-pink-500/20" size={64} />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] animate-pulse">Exchanging Signals...</span>
+              <div className="h-full flex flex-col items-center justify-center text-gray-600 gap-4">
+                <Loader2 className="animate-spin text-pink-500/20" size={48} />
+                <span className="text-[11px] font-bold uppercase tracking-wider animate-pulse">Exchanging Signals...</span>
               </div>
             ) : response ? (
               <pre className="text-sm text-blue-300 leading-loose font-mono bg-transparent">
                 <code>{JSON.stringify(response.data, null, 2)}</code>
               </pre>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-gray-800 gap-4">
-                <div className="p-6 bg-gray-900/50 rounded-[32px] border border-gray-800/50">
-                  <Send size={48} className="opacity-10" />
+              <div className="h-full flex flex-col items-center justify-center text-gray-800 gap-3">
+                <div className="p-5 bg-gray-900/50 rounded-2xl border border-gray-800/50">
+                  <Send size={40} className="opacity-10" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-20">Awaiting Instruction</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider opacity-20">Awaiting Instruction</p>
               </div>
             )}
           </div>
@@ -992,9 +1010,9 @@ export default function ApiTestPage() {
       </div>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
       `}</style>
     </div>

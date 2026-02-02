@@ -83,6 +83,18 @@ export async function adminDeleteCategory(id: string) {
   return true;
 }
 
+export async function adminGetCategoryById(id: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("product_categories")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function adminCreateProduct(
   product: any,
   imageUrls: string[] = [],
@@ -116,6 +128,31 @@ export async function adminCreateProduct(
   }
 
   return newProduct;
+}
+
+export async function adminGetProductById(id: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      `
+      *,
+      product_categories(name),
+      product_images(*)
+    `,
+    )
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+
+  // Map images similar to adminGetProducts
+  return {
+    ...data,
+    image_url:
+      data.product_images?.find((img: any) => img.is_primary)?.image_url ||
+      data.product_images?.[0]?.image_url,
+  };
 }
 
 export async function adminUpdateProduct(id: string, updates: any) {
@@ -287,7 +324,7 @@ export async function adminGetVideoModuleById(id: string) {
 
 export async function adminCreateVideoModule(module: any) {
   const supabase = getSupabase();
-  
+
   const { data, error } = await supabase
     .from("video_modules")
     .insert({
@@ -434,7 +471,7 @@ export async function adminGetMembers() {
 
 export async function adminUpdateMemberPoints(userId: string, points: number, reason: string) {
   const supabase = getSupabase();
-  
+
   // 1. Get current balance
   const { data: profile } = await supabase
     .from("profiles")
@@ -540,10 +577,10 @@ export async function adminApproveCommission(
 
 export async function adminUpdateMembershipStatus(userId: string, status: string) {
   const supabase = getSupabase();
-  
+
   const { data, error } = await supabase
     .from("memberships")
-    .update({ 
+    .update({
       status,
       updated_at: new Date().toISOString()
     })
