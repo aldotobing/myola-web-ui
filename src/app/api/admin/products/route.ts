@@ -122,7 +122,7 @@ export async function PATCH(request: Request) {
     if (imageUrls && imageUrls.length > 0) {
       // Delete old images
       await adminClient.from('product_images').delete().eq('product_id', id)
-      
+
       // Insert new ones
       const imagesToInsert = imageUrls.map((url: string, index: number) => ({
         product_id: id,
