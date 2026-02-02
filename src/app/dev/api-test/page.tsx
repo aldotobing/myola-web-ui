@@ -1068,9 +1068,30 @@ export default function ApiTestPage() {
                 <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] animate-pulse">Syncing Lab...</span>
               </div>
             ) : response ? (
-              <pre className="text-sm text-slate-800 leading-relaxed font-mono selection:bg-pink-100">
-                <code>{JSON.stringify(response.data, null, 2)}</code>
-              </pre>
+              <pre
+                className="text-[13px] leading-relaxed font-mono selection:bg-pink-100 outline-none w-full"
+                dangerouslySetInnerHTML={{
+                  __html: (() => {
+                    const json = JSON.stringify(response.data, null, 2);
+                    return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                      .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                        let cls = 'json-number';
+                        if (/^"/.test(match)) {
+                          if (/:$/.test(match)) {
+                            cls = 'json-key';
+                          } else {
+                            cls = 'json-string';
+                          }
+                        } else if (/true|false/.test(match)) {
+                          cls = 'json-boolean';
+                        } else if (/null/.test(match)) {
+                          cls = 'json-null';
+                        }
+                        return '<span class="' + cls + '">' + match + '</span>';
+                      });
+                  })()
+                }}
+              />
             ) : (
               <div className="h-full flex flex-col items-center justify-center gap-4 text-slate-400">
                 <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm opacity-60">
@@ -1084,10 +1105,21 @@ export default function ApiTestPage() {
       </div>
 
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
         body {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* JSON Syntax Highlighting */
+        .json-key { color: #8b5cf6; font-weight: 600; }     /* Violet-500 */
+        .json-string { color: #059669; }    /* Emerald-600 */
+        .json-number { color: #d946ef; }    /* Fuchsia-500 */
+        .json-boolean { color: #2563eb; font-weight: bold; } /* Blue-600 */
+        .json-null { color: #94a3b8; font-weight: bold; }    /* Slate-400 */
+
+        pre {
+          font-family: 'JetBrains Mono', monospace;
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
