@@ -66,6 +66,8 @@ export default function ApiTestPage() {
   const [status, setStatus] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Data Fetching (GET)", "Admin: Products & Categories"]));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isRequestPanelExpanded, setIsRequestPanelExpanded] = useState(false);
 
   const collections: ApiCollection[] = [
     {
@@ -727,88 +729,124 @@ export default function ApiTestPage() {
     )
   })).filter(group => group.endpoints.length > 0);
 
+
+
+
   return (
-    <div className="flex h-screen bg-[#0F172A] text-gray-300 overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-[400px] bg-[#1E293B] border-r border-gray-800 flex flex-col shadow-2xl">
+    <div className="flex h-screen bg-[#F8FAFC] text-slate-700 overflow-hidden font-sans selection:bg-pink-100 selection:text-pink-900">
+      {/* Collapsible Sidebar */}
+      <div
+        className={`${isSidebarOpen ? 'w-[400px]' : 'w-[80px]'} bg-slate-100/80 backdrop-blur-sm border-r border-slate-200 flex flex-col shadow-sm transition-all duration-300 ease-in-out relative flex-shrink-0`}
+      >
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute -right-3 top-8 bg-white border border-slate-200 rounded-full p-1 shadow-sm text-slate-400 hover:text-pink-600 z-50 transition-colors"
+        >
+          {isSidebarOpen ? <ChevronRight size={14} className="rotate-180" /> : <ChevronRight size={14} />}
+        </button>
+
         {/* Header */}
-        <div className="p-5 border-b border-gray-800 bg-[#1E293B]">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-pink-500 rounded-lg shadow-lg shadow-pink-900/20">
-                <Zap size={18} className="text-white fill-white" />
+        <div className={`p-6 border-b border-slate-200 bg-white/50 ${!isSidebarOpen && 'flex flex-col items-center px-2'}`}>
+          <div className={`flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} mb-6`}>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-pink-600 rounded-2xl shadow-lg shadow-pink-100">
+                <Zap size={20} className="text-white fill-white" />
               </div>
-              <h1 className="font-bold text-white text-base tracking-tight">MYOLA API LAB</h1>
+              {isSidebarOpen && <h1 className="font-extrabold text-slate-900 text-lg tracking-tight whitespace-nowrap">MYOLA API LAB</h1>}
             </div>
-            <div className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-[10px] font-bold border border-green-500/20">
-              CONNECTED
-            </div>
+            {isSidebarOpen && (
+              <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100 tracking-wider whitespace-nowrap">
+                CONNECTED
+              </div>
+            )}
           </div>
 
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
-            <input
-              type="text"
-              placeholder="Search APIs..."
-              className="w-full bg-[#0F172A] border border-gray-700 rounded-lg pl-9 pr-3 py-2.5 text-xs outline-none focus:border-pink-500 transition-colors text-white placeholder:text-gray-600"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          {isSidebarOpen ? (
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search endpoints..."
+                className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all text-slate-900 placeholder:text-slate-400 shadow-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          ) : (
+            <button
+              className="p-3 bg-white border border-slate-200 rounded-xl hover:border-pink-500 transition-colors group"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Search size={20} className="text-slate-400 group-hover:text-pink-600" />
+            </button>
+          )}
 
           {/* Info Banner */}
-          <div className="mt-3 p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-lg">
-            <div className="flex items-start gap-2">
-              <Database size={12} className="text-blue-400 mt-0.5 flex-shrink-0" />
-              <p className="text-[10px] text-blue-400 leading-relaxed">
-                <span className="font-semibold">Data Fetching</span> endpoints query the database directly. Use these to get IDs for testing.
-              </p>
+          {isSidebarOpen && (
+            <div className="mt-4 p-3.5 bg-blue-50 border border-blue-100 rounded-xl">
+              <div className="flex items-start gap-3">
+                <Database size={16} className="text-blue-500 mt-0.5 flex-shrink-0" />
+                <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
+                  <span className="font-bold">Data Fetching (GET)</span> endpoints query the database directly. Perfect for retrieving IDs for other tests.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* API List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
           {filteredCollections.map((group, idx) => (
-            <div key={idx} className="bg-[#0F172A]/50 rounded-xl border border-gray-800/50 overflow-hidden">
-              <button
-                onClick={() => toggleGroup(group.group)}
-                className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-[#1E293B]/50 transition-colors"
-              >
-                <div className="flex-1 text-left">
-                  <h3 className="text-[11px] font-bold text-white uppercase tracking-wide">{group.group}</h3>
-                  {group.description && (
-                    <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">{group.description}</p>
-                  )}
-                </div>
-                {expandedGroups.has(group.group) ? (
-                  <ChevronDown size={14} className="text-gray-500 flex-shrink-0 ml-2" />
-                ) : (
-                  <ChevronRight size={14} className="text-gray-500 flex-shrink-0 ml-2" />
-                )}
-              </button>
-              {expandedGroups.has(group.group) && (
-                <div className="px-2 pb-2 space-y-1">
-                  {group.endpoints.map((item, i) => (
-                    <button
-                      key={i}
-                      onClick={() => selectEndpoint(item)}
-                      className={`w-full text-left px-2.5 py-2 rounded-lg hover:bg-[#1E293B] transition-colors group flex flex-col gap-1.5 ${endpoint === item.path ? 'bg-[#1E293B] border border-pink-500/30' : 'border border-transparent'}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[9px] font-bold w-11 px-1.5 rounded flex items-center justify-center h-4 flex-shrink-0 ${item.method === 'GET' ? 'bg-green-500/10 text-green-400' :
-                          item.method === 'POST' ? 'bg-blue-500/10 text-blue-400' :
-                            item.method === 'PATCH' ? 'bg-orange-500/10 text-orange-400' :
-                              'bg-red-500/10 text-red-400'
-                          }`}>{item.method}</span>
-                        <span className={`text-[11px] font-medium flex-1 leading-tight ${endpoint === item.path ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>{item.label}</span>
-                      </div>
-                      {item.description && (
-                        <p className="text-[9px] text-gray-600 leading-relaxed pl-[3.25rem]">{item.description}</p>
+            <div key={idx} className={`${isSidebarOpen ? 'bg-white rounded-2xl border border-slate-200' : 'flex flex-col items-center'} overflow-hidden shadow-sm`}>
+              {isSidebarOpen ? (
+                <>
+                  <button
+                    onClick={() => toggleGroup(group.group)}
+                    className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors border-b border-slate-100"
+                  >
+                    <div className="flex-1 text-left">
+                      <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest truncate max-w-[200px]">{group.group}</h3>
+                      {group.description && (
+                        <p className="text-[10px] text-slate-500 mt-1 leading-snug font-medium truncate max-w-[220px]">{group.description}</p>
                       )}
-                    </button>
-                  ))}
+                    </div>
+                    {expandedGroups.has(group.group) ? (
+                      <ChevronDown size={16} className="text-slate-400 flex-shrink-0 ml-2" />
+                    ) : (
+                      <ChevronRight size={16} className="text-slate-400 flex-shrink-0 ml-2" />
+                    )}
+                  </button>
+                  {expandedGroups.has(group.group) && (
+                    <div className="p-2 space-y-1 bg-slate-50/30">
+                      {group.endpoints.map((item, i) => (
+                        <button
+                          key={i}
+                          onClick={() => selectEndpoint(item)}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm border transition-all group flex flex-col gap-2 ${endpoint === item.path ? 'bg-white border-pink-200 shadow-sm' : 'border-transparent'}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`text-[10px] font-black w-12 px-1.5 rounded-lg flex items-center justify-center h-5 flex-shrink-0 tracking-tighter shadow-sm ${item.method === 'GET' ? 'bg-emerald-500 text-white' :
+                              item.method === 'POST' ? 'bg-blue-600 text-white' :
+                                item.method === 'PATCH' ? 'bg-amber-500 text-white' :
+                                  'bg-rose-600 text-white'
+                              }`}>{item.method}</span>
+                            <span className={`text-[12px] font-bold flex-1 leading-tight truncate ${endpoint === item.path ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'}`}>{item.label}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="w-full flex flex-col gap-2">
+                  {/* Collapsed Group Icons - could be enhanced to show popovers */}
+                  <div
+                    title={group.group}
+                    className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-pink-600 hover:border-pink-200 cursor-pointer shadow-sm transition-all text-[10px] font-black"
+                  >
+                    {group.group.substring(0, 2).toUpperCase()}
+                  </div>
                 </div>
               )}
             </div>
@@ -816,193 +854,229 @@ export default function ApiTestPage() {
         </div>
 
         {/* User Profile */}
-        <div className="p-3 bg-[#0F172A]/50 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#1E293B] border border-gray-800">
-            <div className="w-9 h-9 rounded-lg bg-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-pink-900/20">
+        <div className={`p-4 bg-white border-t border-slate-200 ${!isSidebarOpen && 'flex justify-center'}`}>
+          <div className={`flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner ${!isSidebarOpen && 'p-0 bg-transparent border-none shadow-none'}`}>
+            <div className={`w-10 h-10 rounded-xl bg-pink-600 flex items-center justify-center text-white font-black text-base shadow-lg shadow-pink-100 flex-shrink-0`}>
               {user?.full_name?.charAt(0)}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold text-white truncate">{user?.full_name}</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <ShieldCheck size={10} className="text-pink-500" />
-                <span className="text-[9px] text-pink-500 uppercase font-bold tracking-wider">{user?.role}</span>
+            {isSidebarOpen && (
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-black text-slate-900 truncate">{user?.full_name}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <ShieldCheck size={12} className="text-pink-600" />
+                  <span className="text-[10px] text-pink-600 uppercase font-black tracking-widest">{user?.role}</span>
+                </div>
               </div>
-            </div>
+            )}
+            {isSidebarOpen && (
+              <button
+                onClick={() => signOut()}
+                className="p-2 text-slate-400 hover:text-rose-500 transition-colors"
+                title="Logout"
+              >
+                <LogIn size={18} />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Panel */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* URL Bar */}
-        <div className="p-6 border-b border-gray-800 bg-[#1E293B]/20">
-          <div className="flex gap-3 max-w-6xl mx-auto">
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className="bg-[#0F172A] border border-gray-700 rounded-xl px-6 py-3 text-pink-500 font-bold text-sm outline-none focus:border-pink-500 shadow-lg transition-colors cursor-pointer hover:border-pink-500/50"
-            >
-              <option>GET</option>
-              <option>POST</option>
-              <option>PATCH</option>
-              <option>DELETE</option>
-            </select>
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Header - URL Bar */}
+        <div className="p-6 border-b border-slate-200 bg-white flex-shrink-0 z-20">
+          <div className="flex gap-4 max-w-6xl mx-auto items-center">
+            <div className="relative">
+              <select
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+                className="appearance-none bg-slate-50 border border-slate-200 rounded-2xl px-8 pr-10 py-4 text-slate-900 font-black text-sm outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 shadow-sm transition-all cursor-pointer hover:bg-slate-100"
+              >
+                <option>GET</option>
+                <option>POST</option>
+                <option>PATCH</option>
+                <option>DELETE</option>
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            </div>
             <div className="flex-1 relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-600 group-focus-within:text-pink-500 transition-colors pointer-events-none">
-                <Globe size={14} />
-                <span className="text-[10px] font-bold tracking-tight opacity-50">LOCALHOST:3000</span>
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-2.5 text-slate-400 group-focus-within:text-pink-600 transition-colors pointer-events-none">
+                <Globe size={16} />
               </div>
               <input
                 type="text"
                 value={endpoint}
                 onChange={(e) => setEndpoint(e.target.value)}
-                className="w-full h-full bg-[#0F172A] border border-gray-700 rounded-xl pl-36 pr-4 outline-none focus:border-pink-500 text-white font-medium text-sm shadow-lg transition-colors"
+                className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl pl-36 pr-6 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 text-slate-900 font-bold text-sm shadow-sm transition-all placeholder:text-slate-300"
               />
             </div>
             <button
               onClick={handleSend}
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-10 py-3 rounded-xl shadow-lg shadow-blue-900/40 transition-all flex items-center gap-2 active:scale-[0.98] disabled:bg-gray-700 disabled:shadow-none disabled:cursor-not-allowed"
+              className="bg-pink-600 hover:bg-pink-500 text-white font-black px-12 py-4 rounded-2xl shadow-xl shadow-pink-100 transition-all flex items-center gap-3 active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed group"
             >
-              {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
               SEND
             </button>
           </div>
         </div>
 
-        {/* Builder Tabs */}
-        <div className="flex-1 flex flex-col min-h-0 bg-[#0F172A]/30">
-          <div className="px-6 border-b border-gray-800 bg-[#1E293B]/10">
-            <div className="flex gap-8">
+        {/* Collapsible Request Config Panel */}
+        <div className={`flex flex-col bg-slate-50 border-b border-slate-200 transition-all duration-300 ease-in-out ${isRequestPanelExpanded ? 'h-[400px]' : 'h-[60px]'} flex-shrink-0 overflow-hidden`}>
+          <div className="px-8 border-b border-slate-200 bg-white flex items-center justify-center relative flex-shrink-0 h-[60px]">
+            <div className="flex gap-10">
               {["params", "authorization", "headers", "body"].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab as any)}
-                  className={`py-4 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all ${activeTab === tab ? 'border-pink-500 text-white' : 'border-transparent text-gray-600 hover:text-gray-300'}`}
+                  onClick={() => { setActiveTab(tab as any); setIsRequestPanelExpanded(true); }}
+                  className={`py-5 text-[11px] font-black uppercase tracking-widest border-b-2 transition-all relative ${activeTab === tab && isRequestPanelExpanded ? 'border-pink-600 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   {tab}
+                  {activeTab === tab && isRequestPanelExpanded && <span className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-pink-600 shadow-sm" />}
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => setIsRequestPanelExpanded(!isRequestPanelExpanded)}
+              className="absolute right-8 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+              title={isRequestPanelExpanded ? "Collapse Request Panel" : "Expand Request Panel"}
+            >
+              {isRequestPanelExpanded ? <ChevronDown size={20} className="rotate-180" /> : <ChevronDown size={20} />}
+            </button>
           </div>
 
-          <div className="flex-1 p-6 overflow-auto custom-scrollbar">
+          <div className={`flex-1 p-8 overflow-auto custom-scrollbar bg-white ${!isRequestPanelExpanded && 'pointer-events-none opacity-0'}`}>
             <div className="max-w-6xl mx-auto h-full">
               {activeTab === 'body' && (
-                <textarea
-                  value={requestBody}
-                  onChange={(e) => setRequestBody(e.target.value)}
-                  placeholder='// Enter JSON request body here...'
-                  className="w-full h-full bg-transparent border-none outline-none text-blue-400 text-sm resize-none custom-scrollbar leading-relaxed font-mono"
-                />
+                <div className="h-full bg-slate-50 rounded-3xl border border-slate-200 p-6 shadow-inner">
+                  <textarea
+                    value={requestBody}
+                    onChange={(e) => setRequestBody(e.target.value)}
+                    placeholder='// Enter JSON request body here...'
+                    className="w-full h-full bg-transparent border-none outline-none text-slate-700 text-sm resize-none custom-scrollbar leading-relaxed font-mono font-medium placeholder:text-slate-300"
+                  />
+                </div>
               )}
               {activeTab === 'authorization' && (
-                <div className="space-y-6">
-                  <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex items-start gap-4">
-                    <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
-                      <Key size={24} />
+                <div className="space-y-8 max-w-4xl">
+                  <div className="p-8 bg-blue-50 border border-blue-100 rounded-3xl flex items-start gap-6 shadow-sm">
+                    <div className="p-4 bg-white rounded-2xl text-blue-600 shadow-sm">
+                      <Key size={32} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-blue-400 uppercase tracking-wide mb-1.5">Bearer Token Authentication</p>
-                      <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">
-                        Protected routes require a valid Supabase JWT. This token is automatically refreshed and injected into your headers.
+                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Bearer Token System</h4>
+                      <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                        Communication with protected endpoints requires a valid Supabase JWT. We handle the handshake automatically using your session data.
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Active Access Token</label>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Active Token Payload</label>
                       <button
-                        onClick={() => { navigator.clipboard.writeText(token); toast.info("Token copied"); }}
-                        className="text-[10px] text-pink-500 font-bold flex items-center gap-1.5 hover:bg-pink-500/10 px-2.5 py-1.5 rounded-lg transition-colors"
+                        onClick={() => { navigator.clipboard.writeText(token); toast.success("Token copied to clipboard"); }}
+                        className="text-[10px] text-blue-600 font-black flex items-center gap-2 hover:bg-blue-100 px-4 py-2 rounded-xl transition-all border border-blue-200 shadow-sm"
                       >
-                        <Copy size={12} /> COPY
+                        <Copy size={12} /> COPY SECRET
                       </button>
                     </div>
-                    <textarea
-                      value={token}
-                      onChange={(e) => setToken(e.target.value)}
-                      className="w-full bg-[#0F172A] border border-gray-700 rounded-2xl p-6 text-[11px] text-gray-500 outline-none focus:border-pink-500 font-mono resize-none leading-relaxed shadow-inner"
-                      rows={10}
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={token}
+                        onChange={(e) => setToken(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-3xl p-8 text-[11px] text-slate-400 outline-none focus:border-blue-500 font-mono resize-none leading-relaxed shadow-inner"
+                        rows={8}
+                      />
+                      <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                        <Lock size={48} className="text-slate-900" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
               {activeTab === 'headers' && (
-                <div className="space-y-3">
-                  <div className="flex gap-4 text-[10px] font-bold text-gray-600 uppercase mb-4 px-2">
-                    <span className="w-44">Header Key</span>
-                    <span>Value</span>
+                <div className="space-y-4 max-w-4xl">
+                  <div className="flex gap-4 text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 px-4">
+                    <span className="w-56 tracking-[0.2em]">Header Key</span>
+                    <span className="tracking-[0.2em]">Computed Value</span>
                   </div>
                   {[
                     { k: "Content-Type", v: "application/json" },
-                    { k: "Authorization", v: `Bearer ${token.slice(0, 40)}...` }
+                    { k: "Authorization", v: `Bearer ${token.slice(0, 40)}...` },
+                    { k: "X-Requested-With", v: "MyolaLab" }
                   ].map((h, i) => (
-                    <div key={i} className="flex gap-4 items-center">
-                      <input readOnly value={h.k} className="w-44 bg-[#1E293B]/50 border border-gray-800 rounded-xl px-4 py-3 text-xs text-pink-500 font-bold" />
-                      <input readOnly value={h.v} className="flex-1 bg-[#1E293B]/50 border border-gray-800 rounded-xl px-4 py-3 text-xs text-gray-500 truncate font-mono" />
+                    <div key={i} className="flex gap-4 items-center group">
+                      <input readOnly value={h.k} className="w-56 bg-white border border-slate-200 rounded-2xl px-5 py-4 text-xs text-slate-900 font-black shadow-sm group-hover:border-slate-300 transition-colors" />
+                      <input readOnly value={h.v} className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs text-slate-400 truncate font-mono font-medium shadow-inner" />
                     </div>
                   ))}
                 </div>
               )}
               {activeTab === 'params' && (
-                <div className="h-full flex flex-col items-center justify-center text-gray-700/50">
-                  <Layout size={64} className="mb-6 opacity-5" />
-                  <p className="text-base font-bold uppercase tracking-wider">Query Parameters</p>
-                  <p className="text-sm mt-2 text-gray-600">Modify URL params directly in the endpoint bar above.</p>
-                  <p className="text-xs mt-1.5 text-gray-700">Example: /api/admin/products?id=UUID_HERE</p>
+                <div className="h-full flex flex-col items-center justify-center text-slate-300">
+                  <div className="p-10 bg-slate-50 rounded-full mb-8 shadow-inner border border-slate-100">
+                    <Layout size={80} className=" opacity-30 text-slate-400" />
+                  </div>
+                  <h5 className="text-lg font-black text-slate-900 uppercase tracking-widest">Query Layer</h5>
+                  <p className="text-sm mt-3 text-slate-500 font-medium text-center max-w-md">Modify your request parameters directly in the URL bar for real-time validation.</p>
+                  <p className="text-xs mt-6 px-6 py-2 bg-slate-100 rounded-full text-slate-400 font-mono italic">Example: /api/admin/products?limit=20&sort=newest</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Response Panel */}
-        <div className="h-[500px] bg-[#0F172A] border-t border-gray-800 flex flex-col shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.5)]">
-          <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between bg-[#1E293B]/10">
-            <div className="flex items-center gap-8">
-              <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Server Response</h2>
+        {/* Flexible Response Panel */}
+        <div className="flex-1 min-h-0 bg-white border-t border-slate-200 flex flex-col shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.05)] relative z-10">
+          <div className="px-8 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur-md flex-shrink-0">
+            <div className="flex items-center gap-10">
+              <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Server Response</h2>
               {status && (
-                <div className="flex gap-6 items-center">
-                  <div className={`px-4 py-1.5 rounded-lg text-[11px] font-bold shadow-lg ${status < 300 ? 'bg-green-500 text-white shadow-green-900/20' : 'bg-red-500 text-white shadow-red-900/20'}`}>
-                    {status}
+                <div className="flex gap-8 items-center">
+                  <div className={`px-5 py-2 rounded-xl text-[12px] font-black shadow-lg tracking-tight ${status < 300 ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-rose-500 text-white shadow-rose-100'}`}>
+                    HTTP {status}
                   </div>
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Clock size={12} />
-                    <span className="text-[11px] font-bold uppercase tracking-wide">{response?.time}</span>
+                  <div className="flex items-center gap-3 text-slate-500">
+                    <Clock size={14} className="text-amber-500" />
+                    <span className="text-[12px] font-bold tracking-tight">{response?.time}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Database size={12} />
-                    <span className="text-[11px] font-bold uppercase tracking-wide">{response?.size}</span>
+                  <div className="flex items-center gap-3 text-slate-500">
+                    <Database size={14} className="text-blue-500" />
+                    <span className="text-[12px] font-bold tracking-tight">{response?.size}</span>
                   </div>
                 </div>
               )}
             </div>
             {response && (
-              <button
-                onClick={() => { navigator.clipboard.writeText(JSON.stringify(response.data, null, 2)); toast.info("JSON response copied"); }}
-                className="text-[10px] font-bold text-pink-500 hover:text-white hover:bg-pink-500 transition-all px-4 py-2 rounded-lg border border-pink-500/30 uppercase tracking-wide"
-              >
-                Copy JSON
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => { navigator.clipboard.writeText(JSON.stringify(response.data, null, 2)); toast.success("JSON Payload mirrored to clipboard"); }}
+                  className="text-[11px] font-black text-slate-600 hover:bg-white transition-all px-6 py-2.5 rounded-xl border border-slate-200 uppercase tracking-widest flex items-center gap-2 shadow-sm"
+                >
+                  <Copy size={14} /> Copy Payload
+                </button>
+              </div>
             )}
           </div>
-          <div className="flex-1 overflow-auto p-6 custom-scrollbar bg-[#020617]/50">
+          <div className="flex-1 overflow-auto p-8 custom-scrollbar bg-slate-50/30">
             {isLoading ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-600 gap-4">
-                <Loader2 className="animate-spin text-pink-500/20" size={48} />
-                <span className="text-[11px] font-bold uppercase tracking-wider animate-pulse">Exchanging Signals...</span>
+              <div className="h-full flex flex-col items-center justify-center gap-6">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-pink-100 blur-3xl rounded-full animate-pulse" />
+                  <Loader2 className="animate-spin text-pink-500 relative z-10" size={56} strokeWidth={3} />
+                </div>
+                <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] animate-pulse">Syncing Lab...</span>
               </div>
             ) : response ? (
-              <pre className="text-sm text-blue-300 leading-loose font-mono bg-transparent">
+              <pre className="text-sm text-slate-800 leading-relaxed font-mono selection:bg-pink-100">
                 <code>{JSON.stringify(response.data, null, 2)}</code>
               </pre>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-gray-800 gap-3">
-                <div className="p-5 bg-gray-900/50 rounded-2xl border border-gray-800/50">
-                  <Send size={40} className="opacity-10" />
+              <div className="h-full flex flex-col items-center justify-center gap-4 text-slate-400">
+                <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm opacity-60">
+                  <Send size={48} className="text-slate-300" />
                 </div>
-                <p className="text-[10px] font-bold uppercase tracking-wider opacity-20">Awaiting Instruction</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.4em] opacity-40">Awaiting Signal</p>
               </div>
             )}
           </div>
@@ -1010,10 +1084,21 @@ export default function ApiTestPage() {
       </div>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
+        
+        input::placeholder, textarea::placeholder {
+          font-weight: 500;
+          opacity: 0.6;
+        }
       `}</style>
     </div>
   );
