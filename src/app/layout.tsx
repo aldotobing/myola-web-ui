@@ -13,6 +13,7 @@ import Footer from "@/components/layout/footer";
 import { AuthProvider } from "./contexts/AuthContexts";
 import { CartProvider } from "./contexts/CartContexts";
 import ToastProvider from "@/components/providers/ToastProvider";
+import SWRProvider from "@/components/providers/SWRProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,14 +51,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${libreBaskervillle.variable} ${montserrat.variable} antialiased font-montserrat`}
       >
-        <AuthProvider>
-          <CartProvider>
-            <ToastProvider />
-            <Navbar />
-            <main className="min-h-screen">{children}</main>
-            <Footer />
-          </CartProvider>
-        </AuthProvider>
+        <SWRProvider>
+          <AuthProvider>
+            <CartProvider>
+              <ToastProvider />
+              <Navbar />
+              <main className="min-h-screen">{children}</main>
+              <Footer />
+            </CartProvider>
+          </AuthProvider>
+        </SWRProvider>
       </body>
     </html>
   );

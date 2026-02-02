@@ -1,11 +1,11 @@
 /** @format */
 
-// app/contexts/AuthContext.tsx
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 interface Profile {
   full_name: string;
@@ -27,50 +27,56 @@ interface AuthContextType {
   user: User | null;
   supabaseUser: SupabaseUser | null;
   isLoading: boolean;
+  isInitialLoading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create client outside component to prevent recreation on every render
 const supabase = createClient();
+
+/**
+ * Utility to wrap a promise with a timeout
+ */
+const withTimeout = (promise: Promise<any>, ms: number) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))
+  ]);
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Refs to prevent race conditions and aborted signals
-  const fetchingRef = useRef<string | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const router = useRouter();
   const isMounted = useRef(true);
+  const fetchingRef = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (sUser: SupabaseUser) => {
-    // Prevent multiple simultaneous fetches for same user
     if (fetchingRef.current === sUser.id) return;
     fetchingRef.current = sUser.id;
 
     try {
-      // Fetch profile and membership in parallel for speed
-      const [profileRes, membershipRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", sUser.id).maybeSingle(),
-        supabase.from("memberships")
-          .select("expires_at, status")
-          .eq("user_id", sUser.id)
-          .order("activated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      ]);
+      // Use maybeSingle and parallel fetch with a soft timeout
+      const response = await withTimeout(
+        Promise.all([
+          supabase.from("profiles").select("*").eq("user_id", sUser.id).maybeSingle(),
+          supabase.from("memberships")
+            .select("expires_at, status")
+            .eq("user_id", sUser.id)
+            .order("activated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        ]),
+        5000 // 5 seconds to fetch profile
+      );
 
       if (!isMounted.current) return;
 
-      if (profileRes.error) {
-        // Ignore AbortError as it's usually benign (tab switching/strict mode)
-        if (profileRes.error.message?.includes('AbortError')) return;
-        console.error("Error fetching profile:", profileRes.error);
-        return;
-      }
-
+      const [profileRes, membershipRes] = response;
       const profile = profileRes.data;
       const membership = membershipRes.data;
 
@@ -89,8 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (error: any) {
-      if (!error.message?.includes('AbortError')) {
-        console.error("Failed to fetch profile:", error);
+      // Silently ignore aborts and timeouts to keep the app "un-stuck"
+      if (!error.message?.includes('AbortError') && error.message !== 'Timeout') {
+        console.error("Auth fetch error:", error);
       }
     } finally {
       fetchingRef.current = null;
@@ -100,27 +107,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     isMounted.current = true;
 
-    // 1. Loading Watchdog
-    const watchdog = setTimeout(() => {
-      if (isLoading && isMounted.current) {
-        setIsLoading(false);
-      }
-    }, 8000);
-
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // RACE: Don't let a stuck lock block the entire app boot
+        const sessionRes = await withTimeout(supabase.auth.getSession(), 3000)
+          .catch(() => ({ data: { session: null } })); // Fallback to null session on timeout/lock error
         
+        const session = sessionRes.data?.session;
         if (session?.user && isMounted.current) {
           setSupabaseUser(session.user);
           await fetchProfile(session.user);
         }
       } catch (err) {
-        console.error("Auth init error:", err);
+        // Ignore initialization errors
       } finally {
         if (isMounted.current) {
           setIsLoading(false);
-          clearTimeout(watchdog);
+          setIsInitialLoading(false);
         }
       }
 
@@ -128,32 +131,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         async (event, session) => {
           if (!isMounted.current) return;
 
-          if (session?.user) {
-            setSupabaseUser(session.user);
-            await fetchProfile(session.user);
-          } else {
+          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            if (session?.user) {
+              setSupabaseUser(session.user);
+              await fetchProfile(session.user);
+            }
+          } else if (event === "SIGNED_OUT") {
             setSupabaseUser(null);
             setUser(null);
+            router.refresh(); 
           }
           setIsLoading(false);
+          setIsInitialLoading(false); // Ensure this is cleared
         }
       );
 
-      return () => {
-        subscription.unsubscribe();
-      };
+      return () => subscription.unsubscribe();
     };
 
-    // 2. Focus Listener (Debounced)
-    let focusTimer: any;
-    const handleFocus = () => {
-      clearTimeout(focusTimer);
-      focusTimer = setTimeout(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user && isMounted.current) {
-          fetchProfile(session.user);
+    const handleFocus = async () => {
+      // Re-verify session validity on window focus with race protection
+      try {
+        const sessionRes = await withTimeout(supabase.auth.getSession(), 2000).catch(() => null);
+        if (sessionRes?.data?.session?.user && isMounted.current) {
+          fetchProfile(sessionRes.data.session.user);
         }
-      }, 500); // Wait 500ms before re-fetching on focus
+      } catch (e) { /* ignore focus check errors */ }
     };
 
     window.addEventListener('focus', handleFocus);
@@ -162,34 +165,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted.current = false;
       window.removeEventListener('focus', handleFocus);
-      clearTimeout(watchdog);
-      clearTimeout(focusTimer);
     };
-  }, [fetchProfile, isLoading]);
+  }, [fetchProfile, router]);
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
       setUser(null);
       setSupabaseUser(null);
-      localStorage.removeItem("myola_cart");
-      localStorage.removeItem("checkout_items");
-      localStorage.removeItem("payment_data");
-      localStorage.removeItem("event_checkout_data");
-      localStorage.removeItem("memberRegistrationData");
+      localStorage.clear();
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Sign out error:", error);
     }
   };
 
   const refreshProfile = async () => {
-    if (supabaseUser) {
-      await fetchProfile(supabaseUser);
-    }
+    if (supabaseUser) await fetchProfile(supabaseUser);
   };
 
   return (
-    <AuthContext.Provider value={{ user, supabaseUser, isLoading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, supabaseUser, isLoading, isInitialLoading, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
@@ -197,9 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
+  if (context === undefined) throw new Error("useAuth must be used within AuthProvider");
   return context;
 }
 

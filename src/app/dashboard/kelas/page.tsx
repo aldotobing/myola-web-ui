@@ -24,31 +24,18 @@ import { getUserCourses } from "@/lib/service/member/kelas";
 import { Course } from "@/types/kelas";
 import CourseCard from "@/components/kelas/KelasCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import useSWR from "swr";
 
 export default function KelasPage() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  //GET COURSES
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadCourses = async () => {
-    setLoading(true);
-    try {
-      const data = await getUserCourses();
-      setCourses(data);
-    } catch (error) {
-      console.error("Error loading courses:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) loadCourses();
-  }, [user]);
+  // Use SWR for Resilient Fetching
+  const { data: courses = [], isLoading: loading } = useSWR(
+    user ? ['user-courses', user.id] : null,
+    () => getUserCourses(user?.id)
+  );
 
   const handleMenuClick = (href: string) => {
     router.push(href);
@@ -57,9 +44,9 @@ export default function KelasPage() {
 
   if (!user) return null;
 
-  const notStartedCourses = courses.filter((c) => c.status === "not_started");
-  const inProgressCourses = courses.filter((c) => c.status === "in_progress");
-  const completedCourses = courses.filter((c) => c.status === "completed");
+  const notStartedCourses = (courses as Course[]).filter((c) => c.status === "not_started");
+  const inProgressCourses = (courses as Course[]).filter((c) => c.status === "in_progress");
+  const completedCourses = (courses as Course[]).filter((c) => c.status === "completed");
 
   const menuItems = [
     { icon: FileText, label: "Profile", href: "/dashboard/profil" },
@@ -83,29 +70,6 @@ export default function KelasPage() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      {showMobileMenu && (
-        <div className="md:hidden bg-white border-b border-gray-200">
-          <div className="px-4 py-3 flex items-center gap-3 border-b bg-pink-50">
-            <Wallet className="w-5 h-5 text-pink-600" />
-            <div>
-              <p className="text-xs text-gray-600">Poin </p>
-              <p className="font-bold text-gray-900">{user.points_balance?.toLocaleString() || "0"}</p>
-            </div>
-          </div>
-          {menuItems.map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleMenuClick(item.href)}
-              className="w-full flex items-center gap-3 px-4 py-3 border-b hover:bg-gray-50 text-left"
-            >
-              <item.icon size={18} className="text-pink-500" />
-              <span className="font-medium text-gray-800 text-sm">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -118,7 +82,7 @@ export default function KelasPage() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-gray-900 truncate">{user.full_name}</h3>
-                  <span className="inline-block bg-pink-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">Member</span>
+                  <span className="inline-block bg-pink-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase mt-1">Member</span>
                 </div>
               </div>
 
@@ -141,39 +105,24 @@ export default function KelasPage() {
             </div>
           </div>
 
-          {/* Main Content */}
+          {/* Main Content Area */}
           <div className="md:col-span-3">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Kelas Saya</h2>
 
             <Tabs defaultValue="not_started" className="w-full">
-              <TabsList className="bg-transparent p-0 h-auto flex w-full overflow-x-auto overflow-y-hidden no-scrollbar justify-start space-x-2 pb-2">
-                <TabsTrigger
-                  value="not_started"
-                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
-                >
-                  Belum Mulai
-                </TabsTrigger>
-                <TabsTrigger
-                  value="in_progress"
-                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap"
-                >
-                  Sedang Berlangsung
-                </TabsTrigger>
-                <TabsTrigger
-                  value="completed"
-                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
-                >
-                  Selesai
-                </TabsTrigger>
+              <TabsList className="bg-white p-1 rounded-2xl border border-gray-100 mb-6 flex overflow-x-auto w-full justify-start md:w-auto">
+                <TabsTrigger value="not_started" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Belum Mulai</TabsTrigger>
+                <TabsTrigger value="in_progress" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap">Sedang Berlangsung</TabsTrigger>
+                <TabsTrigger value="completed" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Selesai</TabsTrigger>
               </TabsList>
 
               {["not_started", "in_progress", "completed"].map((status) => (
                 <TabsContent key={status} value={status}>
-                  {loading ? (
+                  {loading && courses.length === 0 ? (
                     <div className="py-20 text-center"><Loader2 className="w-10 h-10 animate-spin text-pink-500 mx-auto" /></div>
-                  ) : courses.filter(c => c.status === status).length > 0 ? (
+                  ) : (status === "not_started" ? notStartedCourses : status === "in_progress" ? inProgressCourses : completedCourses).length > 0 ? (
                     <div className="space-y-4">
-                      {courses.filter(c => c.status === status).map((course) => (
+                      {(status === "not_started" ? notStartedCourses : status === "in_progress" ? inProgressCourses : completedCourses).map((course) => (
                         <CourseCard key={course.id} course={course} />
                       ))}
                     </div>
