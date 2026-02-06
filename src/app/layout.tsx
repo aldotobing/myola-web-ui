@@ -39,6 +39,9 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "MyOLA - Professional Hair Academy & Store",
   description: "Learn hair techniques and shop professional hair products.",
+  icons: {
+    icon: "/myola.svg",
+  },
 };
 
 export default function RootLayout({

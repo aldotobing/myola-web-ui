@@ -1,46 +1,31 @@
 /** @format */
+
+//orders/[orderNumber]/page.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/contexts/AuthContexts";
-import {
-  FileText,
-  ShoppingCart,
-  Menu,
-  X,
-  Wallet,
-  Coins,
-  Megaphone,
-  MonitorPlayIcon,
-  MapIcon,
-  Settings2Icon,
-  CoinsIcon,
-  User2Icon,
-  ArrowLeft,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import OrderCard from "@/components/orders/OrderCard";
 import { Order } from "@/types/order";
 import OrderProgress from "@/components/orders/OrderProgress";
-import {
-  confirmOrderDelivery,
-  getOrderByNumber,
-} from "@/lib/service/member/pesanan";
-import DeliveryConfirmationModal from "@/components/orders/DeliveryConfirmationModal";
-import DeliveryProofModal from "@/components/orders/DeliveryProofModal";
+import { confirmOrderDelivery } from "@/lib/service/member/pesanan";
 
-// interface OrderDetailPageProps {
-//   params: {
-//     orderNumber: string;
-//   };
-// }
+import DeliveryProofModal from "@/components/orders/DeliveryProofModal";
+import {
+  adminGetOrderByNumber,
+  adminUpdateOrderStatus,
+} from "@/lib/service/admin/admin-service";
+import { toast } from "sonner";
 
 export default function OrderDetailPage() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const [updatingId, setUpdatingId] = useState<string | number | null>(null);
+  const [orders, setOrders] = useState<any[]>([]);
 
   //Orders Detail State
 
@@ -61,7 +46,7 @@ export default function OrderDetailPage() {
     setError(null);
 
     try {
-      const result = await getOrderByNumber(orderNumber);
+      const result = await adminGetOrderByNumber(orderNumber);
 
       if (result) {
         setOrder(result);
@@ -77,33 +62,47 @@ export default function OrderDetailPage() {
   };
 
   const handleBackToList = () => {
-    router.push("/dashboard/pesanan");
+    router.push("/dashboard/admin/orders");
   };
 
   //Modal Delivery Photo Upload State
 
-  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showProofModal, setShowProofModal] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
 
-  const handleDeliveryConfirm = async (photoFile: File) => {
-    setIsConfirming(true);
-
+  const handleUpdateStatus = async (
+    orderId: string | number,
+    status: string,
+  ) => {
+    setUpdatingId(orderId);
     try {
-      const result = await confirmOrderDelivery(orderNumber, photoFile);
+      await adminUpdateOrderStatus(orderId.toString(), status);
 
-      if (result.success && result.order) {
-        setOrder(result.order);
-        setShowDeliveryModal(false);
-        // Show success notification (toast)
-      } else {
-        // Show error notification
-        console.error(result.error);
-      }
-    } catch (error) {
-      console.error("Error confirming delivery:", error);
+      // Update order + notification
+      setOrders((prev) =>
+        prev.map((o) => {
+          if (o.id === orderId) {
+            return {
+              ...o,
+              status,
+              notification: {
+                type: status === "selesai" ? "selesai" : "confirmation",
+                message:
+                  status === "selesai"
+                    ? "Bukti barang diterima."
+                    : "Menunggu konfirmasi dari pembeli",
+              },
+            };
+          }
+          return o;
+        }),
+      );
+
+      toast.success("Status pesanan berhasil diperbarui!");
+      setTimeout(() => window.location.reload(), 500); // Kasih waktu toast muncul
+    } catch (error: any) {
+      toast.error("Gagal update status: " + error.message);
     } finally {
-      setIsConfirming(false);
+      setUpdatingId(null);
     }
   };
 
@@ -115,7 +114,6 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        \
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
@@ -144,191 +142,11 @@ export default function OrderDetailPage() {
     );
   }
 
-  //Menu Handlers
-
-  const handlesignOut = () => {
-    signOut();
-    router.push("/");
-  };
-
-  const handleMenuClick = (href: string) => {
-    router.push(href);
-    setShowMobileMenu(false);
-  };
-
-  const menuItems = [
-    {
-      icon: FileText,
-      label: "Profile",
-      href: "/dashboard/profil",
-      color: "text-pink-500",
-    },
-    {
-      icon: Coins,
-      label: "Poin MYOLA",
-      href: "/dashboard/poin-myola",
-      color: "text-pink-500",
-    },
-    {
-      icon: ShoppingCart,
-      label: "Pesanan Saya",
-      href: "/dashboard/pesanan-saya",
-      color: "text-pink-500",
-    },
-    {
-      icon: MonitorPlayIcon,
-      label: "Kelas Saya",
-      href: "/dashboard/kelas",
-      color: "text-pink-500",
-    },
-    {
-      icon: Megaphone,
-      label: "Event Saya",
-      href: "/dashboard/event-saya",
-      color: "text-pink-500",
-    },
-    {
-      icon: MapIcon,
-      label: "Alamat Pengiriman",
-      href: "/dashboard/alamat",
-      color: "text-pink-500",
-    },
-    {
-      icon: Settings2Icon,
-      label: "Pengaturan Akun",
-      href: "/dashboard/pengaturan-akun-akun",
-      color: "text-pink-500",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="flex justify-between items-center h-16 px-4">
-          <h1 className="text-lg font-bold text-gray-900">Akun</h1>
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            {showMobileMenu ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Menu - Dropdown Style */}
-      {showMobileMenu && (
-        <div className="md:hidden bg-white border-b border-gray-200">
-          {/* Saldo Card */}
-          <div className="px-4 py-3 flex items-center gap-3 border-b bg-blue-50">
-            <Wallet className="w-5 h-5 text-pink-600" />
-            <div>
-              <p className="text-xs text-gray-600">Poin </p>
-              <p className="font-bold text-gray-900">10.000</p>
-            </div>
-          </div>
-
-          {/* Menu Items */}
-          {menuItems.map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleMenuClick(item.href)}
-              className="w-full flex items-center gap-3 px-4 py-3 border-b hover:bg-gray-50 transition-colors text-left"
-            >
-              <item.icon className={`w-5 h-5 ${item.color} flex-shrink-0`} />
-              <span className="flex-1 font-medium text-gray-800 text-sm">
-                {item.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Desktop Sidebar */}
-          <div className="hidden md:block md:col-span-1">
-            <div className="bg-pink-50 rounded-2xl p-6 sticky top-32">
-              {/* User Info */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-pink-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                  {user.full_name.charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-gray-900 truncate">
-                    {user.full_name}
-                  </h3>
-                  <span className="inline-block bg-pink-500 text-white text-xs px-3 py-1 rounded-full mt-1">
-                    {user.points_balance?.toLocaleString() || "10,000"} poin
-                  </span>
-                </div>
-              </div>
-
-              {/* Menu Items */}
-              <nav className="space-y-2">
-                <Link
-                  href="/dashboard/profil"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-white hover:text-pink-600 font-medium transition-colors"
-                >
-                  <User2Icon className="w-5 h-5 flex-shrink-0" />
-                  <span>Profil</span>
-                </Link>
-                <Link
-                  href="/dashboard/poin-myola"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-white hover:text-pink-600 font-medium transition-colors"
-                >
-                  <CoinsIcon className="w-5 h-5 flex-shrink-0" />
-                  <span>Poin MOLA</span>
-                </Link>
-
-                <button
-                  onClick={() => {}}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-white text-pink-600 font-medium hover:bg-pink-100 transition-colors"
-                >
-                  <ShoppingCart className="w-5 h-5 flex-shrink-0" />
-                  <span>Pesanan Saya</span>
-                </button>
-
-                <Link
-                  href="/dashboard/kelas"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-white hover:text-pink-600 font-medium transition-colors"
-                >
-                  <MonitorPlayIcon className="w-5 h-5 flex-shrink-0" />
-                  <span>Kelas Saya</span>
-                </Link>
-
-                <Link
-                  href="/dashboard/event"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-white hover:text-pink-600 font-medium transition-colors"
-                >
-                  <Megaphone className="w-5 h-5 flex-shrink-0" />
-                  <span>Event Saya</span>
-                </Link>
-
-                <Link
-                  href="/dashboard/alamat"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-white hover:text-pink-600 font-medium transition-colors"
-                >
-                  <MapIcon className="w-5 h-5 flex-shrink-0" />
-                  <span>Alamat Pengiriman</span>
-                </Link>
-
-                <Link
-                  href="/dashboard/pengaturan-akun"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-white hover:text-pink-600 font-medium transition-colors"
-                >
-                  <Settings2Icon className="w-5 h-5 flex-shrink-0" />
-                  <span>Pengaturan Akun</span>
-                </Link>
-              </nav>
-            </div>
-          </div>
-
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Header */}
@@ -353,20 +171,35 @@ export default function OrderDetailPage() {
                 <div className="flex justify-between items-center">
                   <p className="text-gray-800 font-semibold">
                     {order.notification.type === "info"
-                      ? "Pesanan sudah sampai?"
-                      : "Pesanan Selesai"}
+                      ? "Siap kirim pesanan?"
+                      : (order.notification.type as string) === "confirmation"
+                        ? "Menunggu konfirmasi penerimaan"
+                        : (order.notification.type as string) === "selesai"
+                          ? "Pesanan sudah diterima"
+                          : "Pesanan Selesai"}
                   </p>
                   {order.status === "sedang_diproses" && (
-                    <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-600">
-                      Sedang Diproses
+                    <button
+                      disabled={updatingId === order.id}
+                      onClick={() =>
+                        handleUpdateStatus(order.id, "sedang_dikirim")
+                      }
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg  hover:bg-blue-600 disabled:opacity-50"
+                      title="Kirim Pesanan"
+                      type="button"
+                    >
+                      Kirim Pesanan
                     </button>
                   )}
                   {order.status === "sedang_dikirim" && (
                     <button
-                      onClick={() => setShowDeliveryModal(true)}
-                      className="bg-pink-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-pink-600"
+                      disabled={updatingId === order.id}
+                      onClick={() => handleUpdateStatus(order.id, "selesai")}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:opacity-50"
+                      title="Selesaikan Pesanan"
+                      type="button"
                     >
-                      Pesanan Diterima
+                      Selesaikan Pesanan
                     </button>
                   )}
                   {order.status === "selesai" && (
@@ -509,19 +342,13 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* MODAL */}
-          <DeliveryConfirmationModal
-            isOpen={showDeliveryModal}
-            onClose={() => setShowDeliveryModal(false)}
-            onConfirm={handleDeliveryConfirm}
-            orderNumber={order.orderNumber}
-            isLoading={isConfirming}
-          />
-
           <DeliveryProofModal
             isOpen={showProofModal}
             onClose={() => setShowProofModal(false)}
-            imageUrl={order.deliveryProof || ""}
+            imageUrl={
+              order.deliveryProof ||
+              "https://upload.wikimedia.org/wikipedia/commons/5/59/Empty.png"
+            }
             orderNumber={order.orderNumber}
           />
         </div>

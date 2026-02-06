@@ -2,6 +2,7 @@
 "use client";
 
 import { Course } from "@/types/kelas";
+import { formatIndoDate } from "@/utils/formatDate";
 import { Clock, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
@@ -104,7 +105,7 @@ export default function CourseCard({
           {course.startDate && (
             <>
               <span>•</span>
-              <span>Mulai belajar {course.startDate}</span>
+              <span>Mulai belajar {formatIndoDate(course.startDate)}</span>
             </>
           )}
         </div>

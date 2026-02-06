@@ -23,22 +23,26 @@ const getStatusText = (status: OrderStatus) => {
  */
 export async function getAllOrders(userId?: string): Promise<Order[]> {
   if (!userId) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return [];
     userId = user.id;
   }
 
   const { data: orders, error } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       *,
       order_items(*)
-    `)
+    `,
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) {
-    if (error.message?.includes('AbortError')) return [];
+    if (error.message?.includes("AbortError")) return [];
     console.error("Error fetching orders:", error);
     return [];
   }
@@ -46,15 +50,18 @@ export async function getAllOrders(userId?: string): Promise<Order[]> {
   return orders.map((order: any) => ({
     id: order.id,
     orderNumber: order.order_number,
-    date: new Date(order.created_at).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }) + " - " + new Date(order.created_at).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
+    date:
+      new Date(order.created_at).toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }) +
+      " - " +
+      new Date(order.created_at).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     status: order.status as OrderStatus,
     statusText: getStatusText(order.status as OrderStatus),
     items: order.order_items.map((item: any) => ({
@@ -62,7 +69,9 @@ export async function getAllOrders(userId?: string): Promise<Order[]> {
       name: item.product_name,
       price: Number(item.unit_price),
       quantity: item.quantity,
-      image: item.product_image_url || "https://placehold.co/80x80/ec4899/ffffff?text=Product",
+      image:
+        item.product_image_url ||
+        "https://placehold.co/80x80/ec4899/ffffff?text=Product",
       cashback: item.cashback_total || 0,
     })),
     totalAmount: Number(order.subtotal),
@@ -76,13 +85,19 @@ export async function getAllOrders(userId?: string): Promise<Order[]> {
     ppn: Number(order.ppn || 0),
     shippingCost: Number(order.shipping_cost || 0),
     deliveryProof: order.delivery_proof_url,
-    notification: order.status === "sedang_dikirim" ? {
-      type: "info",
-      message: "Klik Pesanan Diterima untuk konfirmasi 🎉",
-    } : order.status === "selesai" ? {
-      type: "success",
-      message: "Terima kasih telah berbelanja! Berikan ulasan untuk produk kami.",
-    } : undefined,
+    notification:
+      order.status === "sedang_dikirim"
+        ? {
+            type: "info",
+            message: "Pesanan sedang dikirim ",
+          }
+        : order.status === "selesai"
+          ? {
+              type: "success",
+              message:
+                "Terima kasih telah berbelanja! Berikan ulasan untuk produk kami.",
+            }
+          : undefined,
   }));
 }
 
@@ -91,26 +106,30 @@ export async function getAllOrders(userId?: string): Promise<Order[]> {
  */
 export async function getOrderByNumber(
   orderNumber: string,
-  userId?: string
+  userId?: string,
 ): Promise<Order | null> {
   if (!userId) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return null;
     userId = user.id;
   }
 
   const { data: order, error } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       *,
       order_items(*)
-    `)
+    `,
+    )
     .eq("order_number", orderNumber)
     .eq("user_id", userId)
     .maybeSingle();
 
   if (error || !order) {
-    if (error?.message?.includes('AbortError')) return null;
+    if (error?.message?.includes("AbortError")) return null;
     console.error("Error fetching order:", error);
     return null;
   }
@@ -118,15 +137,18 @@ export async function getOrderByNumber(
   return {
     id: order.id,
     orderNumber: order.order_number,
-    date: new Date(order.created_at).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }) + " - " + new Date(order.created_at).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
+    date:
+      new Date(order.created_at).toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }) +
+      " - " +
+      new Date(order.created_at).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     status: order.status as OrderStatus,
     statusText: getStatusText(order.status as OrderStatus),
     items: order.order_items.map((item: any) => ({
@@ -134,7 +156,9 @@ export async function getOrderByNumber(
       name: item.product_name,
       price: Number(item.unit_price),
       quantity: item.quantity,
-      image: item.product_image_url || "https://placehold.co/80x80/ec4899/ffffff?text=Product",
+      image:
+        item.product_image_url ||
+        "https://placehold.co/80x80/ec4899/ffffff?text=Product",
       cashback: item.cashback_total || 0,
     })),
     totalAmount: Number(order.subtotal),
@@ -148,13 +172,19 @@ export async function getOrderByNumber(
     ppn: Number(order.ppn || 0),
     shippingCost: Number(order.shipping_cost || 0),
     deliveryProof: order.delivery_proof_url,
-    notification: order.status === "sedang_dikirim" ? {
-      type: "info",
-      message: "Klik Pesanan Diterima untuk konfirmasi 🎉",
-    } : order.status === "selesai" ? {
-      type: "success",
-      message: "Terima kasih telah berbelanja! Berikan ulasan untuk produk kami.",
-    } : undefined,
+    notification:
+      order.status === "sedang_dikirim"
+        ? {
+            type: "info",
+            message: "Klik Pesanan Diterima untuk konfirmasi 🎉",
+          }
+        : order.status === "selesai"
+          ? {
+              type: "success",
+              message:
+                "Terima kasih telah berbelanja! Berikan ulasan untuk produk kami.",
+            }
+          : undefined,
   };
 }
 
@@ -163,28 +193,30 @@ export async function getOrderByNumber(
  */
 export async function confirmOrderDelivery(
   orderNumber: string,
-  photoFile?: File
+  photoFile?: File,
 ): Promise<{ success: boolean; order?: Order; error?: string }> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
   try {
     let photoUrl = "";
     if (photoFile) {
-      const fileExt = photoFile.name.split('.').pop();
+      const fileExt = photoFile.name.split(".").pop();
       const fileName = `${orderNumber}-${Math.random()}.${fileExt}`;
       const filePath = `delivery-proofs/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('myola')
+        .from("myola")
         .upload(filePath, photoFile);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('myola')
-        .getPublicUrl(filePath);
-      
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("myola").getPublicUrl(filePath);
+
       photoUrl = publicUrl;
     }
 
@@ -204,7 +236,7 @@ export async function confirmOrderDelivery(
     const updatedOrder = await getOrderByNumber(orderNumber, user.id);
     return { success: true, order: updatedOrder || undefined };
   } catch (error: any) {
-    if (error.message?.includes('AbortError')) return { success: false };
+    if (error.message?.includes("AbortError")) return { success: false };
     console.error("Error confirming delivery:", error);
     return { success: false, error: error.message };
   }

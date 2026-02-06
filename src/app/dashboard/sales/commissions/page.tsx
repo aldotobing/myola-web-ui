@@ -5,16 +5,20 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/contexts/AuthContexts";
 import { useRouter } from "next/navigation";
-import { 
+import {
   ArrowLeft,
   DollarSign,
   Calendar,
   Loader2,
   CheckCircle2,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
 } from "lucide-react";
-import { getSalesProfile, getCommissionLogs, getCommissionSummary } from "@/lib/service/sales/sales-service";
+import {
+  getSalesProfile,
+  getCommissionLogs,
+  getCommissionSummary,
+} from "@/lib/service/sales/sales-service";
 import Link from "next/link";
 
 export default function CommissionsPage() {
@@ -30,7 +34,7 @@ export default function CommissionsPage() {
       if (profile) {
         const [logs, commSummary] = await Promise.all([
           getCommissionLogs(profile.id),
-          getCommissionSummary(profile.id)
+          getCommissionSummary(profile.id),
         ]);
         setCommissions(logs);
         setSummary(commSummary);
@@ -56,23 +60,42 @@ export default function CommissionsPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/sales" className="p-2 hover:bg-white rounded-full transition-colors">
+            <Link
+              href="/dashboard/sales"
+              className="p-2 hover:bg-white rounded-full transition-colors"
+            >
               <ArrowLeft size={24} className="text-gray-600" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Detail Komisi</h1>
-              <p className="text-gray-600">Riwayat pendapatan dari referral Anda</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Detail Komisi
+              </h1>
+              <p className="text-gray-600">
+                Riwayat pendapatan dari referral Anda
+              </p>
             </div>
           </div>
-          
+
           <div className="flex gap-4">
             <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm text-center">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Cair</p>
-              <p className="text-xl font-black text-gray-900">Rp {Number(summary?.total_commission || 0).toLocaleString('id-ID')}</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+                Total Cair
+              </p>
+              <p className="text-xl font-bold text-gray-900">
+                Rp{" "}
+                {Number(summary?.total_commission || 0).toLocaleString("id-ID")}
+              </p>
             </div>
             <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm text-center">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Pending</p>
-              <p className="text-xl font-black text-pink-600">Rp {Number(summary?.pending_commission || 0).toLocaleString('id-ID')}</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+                Pending
+              </p>
+              <p className="text-xl font-bold text-pink-600">
+                Rp{" "}
+                {Number(summary?.pending_commission || 0).toLocaleString(
+                  "id-ID",
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -83,23 +106,42 @@ export default function CommissionsPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
-                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Tanggal</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Member</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Tipe</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Nilai Transaksi</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Komisi (%)</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Jumlah Komisi</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Status</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Tanggal
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Member
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Tipe
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
+                    Nilai Transaksi
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
+                    Komisi (%)
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
+                    Jumlah Komisi
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y border-gray-100">
                 {commissions.length > 0 ? (
                   commissions.map((comm) => (
-                    <tr key={comm.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr
+                      key={comm.id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 text-gray-600 text-sm">
                           <Calendar size={14} />
-                          {new Date(comm.created_at).toLocaleDateString('id-ID')}
+                          {new Date(comm.created_at).toLocaleDateString(
+                            "id-ID",
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 font-bold text-gray-900">
@@ -107,21 +149,28 @@ export default function CommissionsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-xs font-bold px-2 py-1 bg-gray-100 text-gray-600 rounded-md">
-                          {comm.commission_type === 'join_member' ? 'JOIN MEMBER' : 'BELANJA'}
+                          {comm.commission_type === "join_member"
+                            ? "JOIN MEMBER"
+                            : "BELANJA"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-gray-600">
-                        Rp {Number(comm.transaction_amount).toLocaleString('id-ID')}
+                        Rp{" "}
+                        {Number(comm.transaction_amount).toLocaleString(
+                          "id-ID",
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-gray-600">
                         {(comm.commission_rate * 100).toFixed(0)}%
                       </td>
-                      <td className="px-6 py-4 text-right font-black text-gray-900">
-                        Rp {Number(comm.commission_amount).toLocaleString('id-ID')}
+                      <td className="px-6 py-4 text-right font-bold text-gray-900">
+                        Rp{" "}
+                        {Number(comm.commission_amount).toLocaleString("id-ID")}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
-                          {comm.status === 'paid' || comm.status === 'approved' ? (
+                          {comm.status === "paid" ||
+                          comm.status === "approved" ? (
                             <div className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full text-xs font-bold">
                               <CheckCircle2 size={12} /> BERHASIL
                             </div>
@@ -136,7 +185,10 @@ export default function CommissionsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-20 text-center text-gray-400 italic">
+                    <td
+                      colSpan={7}
+                      className="px-6 py-20 text-center text-gray-400 italic"
+                    >
                       Belum ada catatan komisi tersedia.
                     </td>
                   </tr>

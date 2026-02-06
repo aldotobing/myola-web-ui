@@ -33,8 +33,8 @@ export default function KelasPage() {
 
   // Use SWR for Resilient Fetching
   const { data: courses = [], isLoading: loading } = useSWR(
-    user ? ['user-courses', user.id] : null,
-    () => getUserCourses(user?.id)
+    user ? ["user-courses", user.id] : null,
+    () => getUserCourses(user?.id),
   );
 
   const handleMenuClick = (href: string) => {
@@ -44,9 +44,15 @@ export default function KelasPage() {
 
   if (!user) return null;
 
-  const notStartedCourses = (courses as Course[]).filter((c) => c.status === "not_started");
-  const inProgressCourses = (courses as Course[]).filter((c) => c.status === "in_progress");
-  const completedCourses = (courses as Course[]).filter((c) => c.status === "completed");
+  const notStartedCourses = (courses as Course[]).filter(
+    (c) => c.status === "not_started",
+  );
+  const inProgressCourses = (courses as Course[]).filter(
+    (c) => c.status === "in_progress",
+  );
+  const completedCourses = (courses as Course[]).filter(
+    (c) => c.status === "completed",
+  );
 
   const menuItems = [
     { icon: FileText, label: "Profile", href: "/dashboard/profil" },
@@ -55,7 +61,11 @@ export default function KelasPage() {
     { icon: MonitorPlayIcon, label: "Kelas Saya", href: "/dashboard/kelas" },
     { icon: Megaphone, label: "Event Saya", href: "/dashboard/event" },
     { icon: MapIcon, label: "Alamat Pengiriman", href: "/dashboard/alamat" },
-    { icon: Settings2Icon, label: "Pengaturan Akun", href: "/dashboard/pengaturan-akun" },
+    {
+      icon: Settings2Icon,
+      label: "Pengaturan Akun",
+      href: "/dashboard/pengaturan-akun",
+    },
   ];
 
   return (
@@ -64,7 +74,10 @@ export default function KelasPage() {
       <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="flex justify-between items-center h-16 px-4">
           <h1 className="text-lg font-bold text-gray-900">Kelas Saya</h1>
-          <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="p-2">
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="p-2"
+          >
             {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -81,8 +94,12 @@ export default function KelasPage() {
                   {user.full_name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-gray-900 truncate">{user.full_name}</h3>
-                  <span className="inline-block bg-pink-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase mt-1">Member</span>
+                  <h3 className="font-bold text-gray-900 truncate">
+                    {user.full_name}
+                  </h3>
+                  <span className="inline-block bg-pink-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase mt-1">
+                    Member
+                  </span>
                 </div>
               </div>
 
@@ -92,8 +109,8 @@ export default function KelasPage() {
                     key={idx}
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                      item.href === "/dashboard/kelas" 
-                        ? "bg-white text-pink-600 shadow-sm" 
+                      item.href === "/dashboard/kelas"
+                        ? "bg-white text-pink-600 shadow-sm"
                         : "text-gray-700 hover:bg-white hover:text-pink-600"
                     }`}
                   >
@@ -107,22 +124,51 @@ export default function KelasPage() {
 
           {/* Main Content Area */}
           <div className="md:col-span-3">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Kelas Saya</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+              Kelas Saya
+            </h2>
 
             <Tabs defaultValue="not_started" className="w-full">
-              <TabsList className="bg-white p-1 rounded-2xl border border-gray-100 mb-6 flex overflow-x-auto w-full justify-start md:w-auto">
-                <TabsTrigger value="not_started" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Belum Mulai</TabsTrigger>
-                <TabsTrigger value="in_progress" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap">Sedang Berlangsung</TabsTrigger>
-                <TabsTrigger value="completed" className="px-6 py-2.5 rounded-xl data-[state=active]:bg-pink-500 data-[state=active]:text-white">Selesai</TabsTrigger>
+              <TabsList className="bg-transparent p-0 h-auto flex w-full overflow-x-auto overflow-y-hidden no-scrollbar justify-start space-x-2 pb-2">
+                <TabsTrigger
+                  value="not_started"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                >
+                  Belum Mulai
+                </TabsTrigger>
+                <TabsTrigger
+                  value="in_progress"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap"
+                >
+                  Sedang Berlangsung
+                </TabsTrigger>
+                <TabsTrigger
+                  value="completed"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                >
+                  Selesai
+                </TabsTrigger>
               </TabsList>
 
               {["not_started", "in_progress", "completed"].map((status) => (
                 <TabsContent key={status} value={status}>
                   {loading && courses.length === 0 ? (
-                    <div className="py-20 text-center"><Loader2 className="w-10 h-10 animate-spin text-pink-500 mx-auto" /></div>
-                  ) : (status === "not_started" ? notStartedCourses : status === "in_progress" ? inProgressCourses : completedCourses).length > 0 ? (
+                    <div className="py-20 text-center">
+                      <Loader2 className="w-10 h-10 animate-spin text-pink-500 mx-auto" />
+                    </div>
+                  ) : (status === "not_started"
+                      ? notStartedCourses
+                      : status === "in_progress"
+                        ? inProgressCourses
+                        : completedCourses
+                    ).length > 0 ? (
                     <div className="space-y-4">
-                      {(status === "not_started" ? notStartedCourses : status === "in_progress" ? inProgressCourses : completedCourses).map((course) => (
+                      {(status === "not_started"
+                        ? notStartedCourses
+                        : status === "in_progress"
+                          ? inProgressCourses
+                          : completedCourses
+                      ).map((course) => (
                         <CourseCard key={course.id} course={course} />
                       ))}
                     </div>
@@ -131,9 +177,16 @@ export default function KelasPage() {
                       <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <MonitorPlayIcon className="w-10 h-10 text-gray-200" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">Belum ada kelas</h3>
-                      <p className="text-gray-500 mb-6">Mulai belajar dari kelas yang tersedia di Akademi.</p>
-                      <Link href="/akademi" className="inline-block px-8 py-3 bg-pink-500 text-white font-bold rounded-xl shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        Belum ada kelas
+                      </h3>
+                      <p className="text-gray-500 mb-6">
+                        Mulai belajar dari kelas yang tersedia di Akademi.
+                      </p>
+                      <Link
+                        href="/akademi"
+                        className="inline-block px-8 py-3 bg-pink-500 text-white font-bold rounded-xl shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all"
+                      >
                         Jelajahi Akademi
                       </Link>
                     </div>

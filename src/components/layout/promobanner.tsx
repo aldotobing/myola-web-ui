@@ -94,43 +94,43 @@ export default function PromoBanner() {
                   className={`relative bg-gradient-to-r ${banner.bgColor} rounded-3xl overflow-hidden shadow-2xl min-h-[400px] md:min-h-[500px]`}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-                    {/* Left Content */}
-                    <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 text-white z-10">
-                      {/* Title with Icon */}
-                      <div className="flex items-center gap-3 mb-6">
-                        <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-                          {banner?.title || ""}
-                        </h3>
+                  {/* Left Content */}
+                  <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 text-white z-10">
+                    {/* Title with Icon */}
+                    <div className="flex items-center gap-3 mb-6">
+                    <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+                      {banner?.title || ""}
+                    </h3>
 
-                        <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-yellow-300" />
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-lg md:text-xl leading-relaxed mb-8 text-white/90">
-                        {banner.description}
-                      </p>
-
-                      {/* CTA Button */}
-                      <div>
-                        <a
-                          href={banner.buttonLink}
-                          className="inline-block bg-white text-gray-900 font-bold text-lg px-8 py-4 rounded-xl hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                        >
-                          {banner.buttonText}
-                        </a>
-                      </div>
+                    <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-yellow-300" />
                     </div>
 
-                    {/* Right Image */}
-                    <div className="relative min-h-[400px] md:min-h-[500px] md:h-auto">
-                      <Image
-                        src={banner.image}
-                        alt={banner.title}
-                        fill
-                        className="object-cover"
-                        priority={banner.id === "1"}
-                      />
+                    {/* Description */}
+                    <p className="text-lg md:text-xl leading-relaxed mb-8 text-white/90">
+                    {banner.description}
+                    </p>
+
+                    {/* CTA Button */}
+                    <div>
+                    <a
+                      href={banner.buttonLink}
+                      className="inline-block bg-white text-gray-900 font-bold text-lg px-8 py-4 rounded-xl hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      {banner.buttonText}
+                    </a>
                     </div>
+                  </div>
+
+                  {/* Right Image - Hidden on Mobile */}
+                  <div className="hidden md:block relative min-h-[400px] md:min-h-[500px] md:h-auto">
+                    <Image
+                    src={banner.image}
+                    alt={banner.title}
+                    fill
+                    className="object-cover"
+                    priority={banner.id === "1"}
+                    />
+                  </div>
                   </div>
                 </div>
               </div>

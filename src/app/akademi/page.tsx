@@ -23,6 +23,8 @@ export default function AkademiPage() {
     dedupingInterval: 10000,
   });
 
+  console.log("Courses data:", courses);
+
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = course.title
       .toLowerCase()
@@ -104,7 +106,7 @@ export default function AkademiPage() {
               </p>
             </div>
           ) : filteredCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {filteredCourses.map((course) => (
                 <ClassCard
                   key={course.id}
@@ -122,7 +124,7 @@ export default function AkademiPage() {
               <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <BookOpen className="w-12 h-12 text-gray-200" />
               </div>
-              <h3 className="text-2xl text-gray-900 font-black mb-2">
+              <h3 className="text-2xl text-gray-900 font-bold mb-2">
                 Belum ada kelas tersedia
               </h3>
               <p className="text-gray-500 font-medium">

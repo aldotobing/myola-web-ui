@@ -74,7 +74,7 @@ export default function CourseDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <section className="bg-white py-16 px-4 border-b border-gray-100">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-4xl lg:text-4xl font-bold text-gray-900 mb-4">
             {course.title}
           </h1>
         </div>

@@ -88,20 +88,20 @@ export default function ProductCard({
       </div>
 
       {/* Product Image */}
-      <div className="relative rounded-lg md:rounded-2xl lg:rounded-2xl  h-48 md:h-72 lg:h-72 bg-gradient-to-b  from-[#F8F8FF] to-[#F8F8FF] px-8 pt-8 pb-4">
-        <div className="relative h-56 md:h-64 lg:h-64 w-full">
+      <div className="relative rounded-lg md:rounded-2xl lg:rounded-2xl h-40 md:h-72 lg:h-72 bg-gradient-to-b from-[#F8F8FF] to-[#F8F8FF] px-4 md:px-8 pt-4 md:pt-8 pb-4">
+        <div className="relative h-32 md:h-64 lg:h-64 w-full">
           <Image
-            src={image}
-            alt={name}
-            fill
-            className="object-contain group-hover:scale-110 transition-transform duration-500"
+        src={image}
+        alt={name}
+        fill
+        className="object-contain group-hover:scale-110 transition-transform duration-500"
           />
         </div>
 
         {/* Out of Stock Overlay */}
         {!inStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
-            <p className="text-white font-bold text-lg">Habis</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg md:rounded-2xl lg:rounded-2xl">
+        <p className="text-white font-bold text-sm md:text-lg">Habis</p>
           </div>
         )}
       </div>
