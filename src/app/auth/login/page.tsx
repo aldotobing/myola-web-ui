@@ -85,7 +85,7 @@ export default function LoginPage() {
           </h1>
           <p className="text-gray-600 text-lg">
             Mulai belajar jadi profesional bersama
-            <span className="text-pink-500 font-bold">MyOLA</span>{" "}
+            <span className="text-pink-500 font-bold"> MyOLA</span>{" "}
           </p>
         </div>
 

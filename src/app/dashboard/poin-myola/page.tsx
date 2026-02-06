@@ -173,7 +173,7 @@ export default function PoinPage() {
                   Total Saldo Anda
                 </p>
                 <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-5xl font-black tracking-tight">
+                  <span className="text-5xl font-bold tracking-tight">
                     {(user.points_balance || 0).toLocaleString("id-ID")}
                   </span>
                   <span className="text-xl font-bold opacity-80">Poin</span>
@@ -244,7 +244,7 @@ export default function PoinPage() {
                           </div>
                         </div>
                         <div
-                          className={`text-lg font-black ${t.amount > 0 ? "text-green-600" : "text-red-600"}`}
+                          className={`text-lg font-bold ${t.amount > 0 ? "text-green-600" : "text-red-600"}`}
                         >
                           {t.amount > 0 ? "+" : ""}
                           {t.amount.toLocaleString("id-ID")}
@@ -283,7 +283,7 @@ export default function PoinPage() {
               <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
                 <div className="p-8">
                   <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-2xl font-black text-gray-900">
+                    <h2 className="text-2xl font-bold text-gray-900">
                       Tentang Poin MOLA
                     </h2>
                     <button

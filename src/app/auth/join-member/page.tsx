@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Eye, EyeOff } from "lucide-react";
+import { Upload, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 
@@ -33,10 +33,14 @@ export default function JoinMemberPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.namaLengkap.trim()) newErrors.namaLengkap = "Nama lengkap wajib diisi";
-    if (!formData.tempatLahir) newErrors.tempatLahir = "Tempat lahir wajib diisi";
-    if (!formData.tanggalLahir) newErrors.tanggalLahir = "Tanggal lahir wajib diisi";
-    if (!formData.jenisKelamin) newErrors.jenisKelamin = "Jenis kelamin wajib dipilih";
+    if (!formData.namaLengkap.trim())
+      newErrors.namaLengkap = "Nama lengkap wajib diisi";
+    if (!formData.tempatLahir)
+      newErrors.tempatLahir = "Tempat lahir wajib diisi";
+    if (!formData.tanggalLahir)
+      newErrors.tanggalLahir = "Tanggal lahir wajib diisi";
+    if (!formData.jenisKelamin)
+      newErrors.jenisKelamin = "Jenis kelamin wajib dipilih";
     if (!formData.noHp.trim()) {
       newErrors.noHp = "Nomor HP wajib diisi";
     } else if (formData.noHp.length < 10) {
@@ -107,8 +111,8 @@ export default function JoinMemberPage() {
         // 2. Upload KTP using API (which uses Admin Client to bypass RLS)
         if (formData.uploadKTP) {
           const uploadFormData = new FormData();
-          uploadFormData.append('file', formData.uploadKTP);
-          uploadFormData.append('userId', userId);
+          uploadFormData.append("file", formData.uploadKTP);
+          uploadFormData.append("userId", userId);
 
           const uploadResponse = await fetch("/api/member/upload-ktp", {
             method: "POST",
@@ -155,11 +159,16 @@ export default function JoinMemberPage() {
     <div className="min-h-screen py-12 px-4 bg-gray-50">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Join Member</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Join Member
+          </h1>
           <p className="text-gray-600 text-lg">
             Mulai belajar jadi profesional!{" "}
-            <span className="text-pink-500 font-bold">Bayar Rp99.000 per bulan</span>{" "}
-            untuk akses akademi dan dapatkan cashback di setiap pembelian produk!
+            <span className="text-pink-500 font-bold">
+              Bayar Rp99.000 per bulan
+            </span>{" "}
+            untuk akses akademi dan dapatkan cashback di setiap pembelian
+            produk!
           </p>
         </div>
 
@@ -173,38 +182,56 @@ export default function JoinMemberPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nama Lengkap *
+                </label>
                 <input
                   type="text"
                   value={formData.namaLengkap}
-                  onChange={(e) => setFormData({ ...formData, namaLengkap: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, namaLengkap: e.target.value })
+                  }
                   placeholder="Nama Lengkap"
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.namaLengkap ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
                 />
-                {errors.namaLengkap && <p className="text-red-500 text-sm mt-1">{errors.namaLengkap}</p>}
+                {errors.namaLengkap && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.namaLengkap}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email *
+                </label>
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   placeholder="Email"
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.email ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
                 />
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="relative">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Password *
+                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
                     placeholder="Password"
                     className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.password ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
                   />
@@ -213,99 +240,163 @@ export default function JoinMemberPage() {
                     onClick={togglePasswordVisibility}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
-                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">No. Hp * (+62)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  No. Hp * (+62)
+                </label>
                 <input
                   type="tel"
                   value={formData.noHp}
-                  onChange={(e) => setFormData({ ...formData, noHp: e.target.value.replace(/\D/g, "") })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      noHp: e.target.value.replace(/\D/g, ""),
+                    })
+                  }
                   placeholder="8123456789"
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.noHp ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
                 />
-                {errors.noHp && <p className="text-red-500 text-sm mt-1">{errors.noHp}</p>}
+                {errors.noHp && (
+                  <p className="text-red-500 text-sm mt-1">{errors.noHp}</p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tempat Lahir *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tempat Lahir *
+                </label>
                 <input
                   type="text"
                   value={formData.tempatLahir}
-                  onChange={(e) => setFormData({ ...formData, tempatLahir: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tempatLahir: e.target.value })
+                  }
                   placeholder="Tempat Lahir"
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.tempatLahir ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
                 />
-                {errors.tempatLahir && <p className="text-red-500 text-sm mt-1">{errors.tempatLahir}</p>}
+                {errors.tempatLahir && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.tempatLahir}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tanggal Lahir *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tanggal Lahir *
+                </label>
                 <input
                   type="date"
                   value={formData.tanggalLahir}
-                  onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tanggalLahir: e.target.value })
+                  }
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.tanggalLahir ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
                 />
-                {errors.tanggalLahir && <p className="text-red-500 text-sm mt-1">{errors.tanggalLahir}</p>}
+                {errors.tanggalLahir && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.tanggalLahir}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Jenis Kelamin *</label>
-                <select
-                  value={formData.jenisKelamin}
-                  onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.jenisKelamin ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
-                >
-                  <option value="">Pilih Jenis Kelamin</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
-                {errors.jenisKelamin && <p className="text-red-500 text-sm mt-1">{errors.jenisKelamin}</p>}
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Jenis Kelamin *
+                </label>
+                <div className="relative">
+                  <select
+                    value={formData.jenisKelamin}
+                    onChange={(e) =>
+                      setFormData({ ...formData, jenisKelamin: e.target.value })
+                    }
+                    className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none appearance-none ${errors.jenisKelamin ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
+                  >
+                    <option value="">Pilih Jenis Kelamin</option>
+                    <option value="Laki-laki">Laki-laki</option>
+                    <option value="Perempuan">Perempuan</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                </div>
+                {errors.jenisKelamin && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.jenisKelamin}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Nomor KTP * (16 digit)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nomor KTP * (16 digit)
+                </label>
                 <input
                   type="text"
                   value={formData.nomorKTP}
-                  onChange={(e) => setFormData({ ...formData, nomorKTP: e.target.value.replace(/\D/g, "").slice(0, 16) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      nomorKTP: e.target.value.replace(/\D/g, "").slice(0, 16),
+                    })
+                  }
                   placeholder="350xxxxxxxxxxxxx"
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${errors.nomorKTP ? "border-red-500" : "border-gray-200 focus:border-pink-500"}`}
                 />
-                {errors.nomorKTP && <p className="text-red-500 text-sm mt-1">{errors.nomorKTP}</p>}
+                {errors.nomorKTP && (
+                  <p className="text-red-500 text-sm mt-1">{errors.nomorKTP}</p>
+                )}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Upload KTP *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Upload KTP *
+              </label>
               <div className="flex gap-3">
                 <label className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-xl font-bold cursor-pointer transition-colors flex items-center gap-2">
                   <Upload className="w-5 h-5" />
                   Upload File
-                  <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                 </label>
                 <span className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-500 flex items-center overflow-hidden">
                   {ktpFileName || "Pilih foto KTP..."}
                 </span>
               </div>
-              {errors.uploadKTP && <p className="text-red-500 text-sm mt-1">{errors.uploadKTP}</p>}
+              {errors.uploadKTP && (
+                <p className="text-red-500 text-sm mt-1">{errors.uploadKTP}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Referral Code (Opsional)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Referral Code (Opsional)
+              </label>
               <input
                 type="text"
                 value={formData.referralCode}
-                onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, referralCode: e.target.value })
+                }
                 placeholder="Kode referral"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500"
               />

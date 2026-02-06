@@ -20,7 +20,7 @@ export default function FreebiesPage() {
       title: "Hair Color Palette Collection (PDF)",
       description:
         "Kumpulan palet warna rambut terbaru dari ash brown sampai rose gold untuk inspirasi warna yang sempurna",
-      image: "/images/freebie-palette.png",
+      image: "/images/freebies-1.avif",
       downloadCount: 100,
       fileType: "PDF",
       downloadUrl: "/downloads/hair-color-palette.pdf",
@@ -30,7 +30,7 @@ export default function FreebiesPage() {
       title: "Trend Haircut Lookbook 2025 (PDF)",
       description:
         "Lookbook berisi inspirasi potongan rambut modern untuk wanita dan pria dengan gaya terkini tahun 2025",
-      image: "/images/freebie-lookbook.png",
+      image: "/images/freebie-2.jpeg",
       downloadCount: 100,
       fileType: "PDF",
       downloadUrl: "/downloads/trend-haircut-lookbook.pdf",
@@ -40,7 +40,7 @@ export default function FreebiesPage() {
       title: "Hair Care Product Label Mockup (PSD)",
       description:
         "Kumpulan palet warna rambut terbaru dari ash brown sampai rose gold untuk inspirasi warna yang sempurna",
-      image: "/images/freebie-mockup.png",
+      image: "/images/freebie-3.jpg",
       downloadCount: 100,
       fileType: "PSD",
       downloadUrl: "/downloads/hair-care-mockup.psd",
@@ -50,7 +50,7 @@ export default function FreebiesPage() {
       title: "Bleaching & Toning Guide (PDF)",
       description:
         "Kumpulan palet warna rambut terbaru dari ash brown sampai rose gold untuk inspirasi warna yang sempurna",
-      image: "/images/freebie-guide.png",
+      image: "/images/freebie-4.png",
       downloadCount: 100,
       fileType: "PDF",
       downloadUrl: "/downloads/bleaching-guide.pdf",
@@ -67,7 +67,7 @@ export default function FreebiesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Header Section */}
       <section className="bg-white py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -127,7 +127,7 @@ export default function FreebiesPage() {
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           {filteredFreebies.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredFreebies.map((freebie) => (
                 <FreebiesCard key={freebie.id} {...freebie} />
               ))}

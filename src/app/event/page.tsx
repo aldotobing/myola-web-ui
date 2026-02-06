@@ -122,7 +122,7 @@ export default function EventPage() {
               <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Calendar className="w-12 h-12 text-gray-200" />
               </div>
-              <h3 className="text-2xl text-gray-900 font-black mb-2">
+              <h3 className="text-2xl text-gray-900 font-bold mb-2">
                 Event tidak ditemukan
               </h3>
               <p className="text-gray-500 font-medium">

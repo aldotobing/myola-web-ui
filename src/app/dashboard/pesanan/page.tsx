@@ -170,7 +170,7 @@ export default function PesananPage() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="sedang_diproses"
-                  className="bg-pink-50 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap"
+                  className="bg-pink-100 text-pink-500 px-6 py-2 rounded-lg font-medium data-[state=active]:bg-pink-500 data-[state=active]:text-white whitespace-nowrap"
                 >
                   Sedang Diproses
                 </TabsTrigger>

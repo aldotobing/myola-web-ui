@@ -105,28 +105,29 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           {!user || (user.role !== "admin" && user.role !== "sales") ? (
             <div className="hidden lg:flex items-center space-x-12 absolute left-1/2 transform -translate-x-1/2">
-                          {navLinks.map((link) => (
-                            <Link
-                              key={link.name}
-                              href={link.href}
-                              className={`transition-colors duration-200 text-base ${
-                                isActive(link.href)
-                                  ? "text-pink-600 font-bold"
-                                  : "text-gray-800 font-medium hover:text-pink-600"
-                              }`}
-                            >
-                              {link.name}
-                            </Link>
-                          ))}
-                          {isDev && (
-                            <Link 
-                              href="/dev/api-test" 
-                              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-black hover:bg-black transition-all shadow-lg shadow-gray-200"
-                            >
-                              <Terminal size={14} className="text-pink-500" /> DEV LAB
-                            </Link>
-                          )}
-                        </div>          ) : null}
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`transition-colors duration-200 text-base ${
+                    isActive(link.href)
+                      ? "text-pink-600 font-bold"
+                      : "text-gray-800 font-medium hover:text-pink-600"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              {isDev && (
+                <Link
+                  href="/dev/api-test"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-lg shadow-gray-200"
+                >
+                  <Terminal size={14} className="text-pink-500" /> DEV LAB
+                </Link>
+              )}
+            </div>
+          ) : null}
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-3">
@@ -173,7 +174,7 @@ export default function Navbar() {
                           {user.memberUntil &&
                             new Date(user.memberUntil).getTime() - Date.now() <
                               7 * 24 * 60 * 60 * 1000 && (
-                              <span className="text-[9px] font-black text-orange-600 animate-pulse">
+                              <span className="text-[9px] font-bold text-orange-600 animate-pulse">
                                 ⚠️ SEGERA BERAKHIR
                               </span>
                             )}
@@ -196,12 +197,13 @@ export default function Navbar() {
                           <LayoutDashboard size={18} /> Master Dashboard
                         </Link>
                         {isDev && (
-                          <Link 
-                            href="/dev/api-test" 
-                            onClick={() => setShowDropdown(false)} 
-                            className="w-full text-left px-6 py-3 text-gray-900 bg-gray-50 hover:bg-gray-100 font-black flex items-center gap-3 transition-colors border-y border-gray-100"
+                          <Link
+                            href="/dev/api-test"
+                            onClick={() => setShowDropdown(false)}
+                            className="w-full text-left px-6 py-3 text-gray-900 bg-gray-50 hover:bg-gray-100 font-bold flex items-center gap-3 transition-colors border-y border-gray-100"
                           >
-                            <Terminal size={18} className="text-pink-500" /> API LAB (DEV)
+                            <Terminal size={18} className="text-pink-500" /> API
+                            LAB (DEV)
                           </Link>
                         )}
                       </>
@@ -292,10 +294,10 @@ export default function Navbar() {
                     </Link>
                   ))}{" "}
                   {isDev && (
-                    <Link 
-                      href="/dev/api-test" 
+                    <Link
+                      href="/dev/api-test"
                       onClick={() => setIsMenuOpen(false)}
-                      className="px-4 py-3 rounded-xl text-lg font-black bg-gray-900 text-white flex items-center gap-3"
+                      className="px-4 py-3 rounded-xl text-lg font-bold bg-gray-900 text-white flex items-center gap-3"
                     >
                       <Terminal size={20} className="text-pink-500" /> DEV LAB
                     </Link>
@@ -321,12 +323,13 @@ export default function Navbar() {
                         <LayoutDashboard size={20} /> Master Dashboard
                       </Link>
                       {isDev && (
-                        <Link 
-                          href="/dev/api-test" 
+                        <Link
+                          href="/dev/api-test"
                           onClick={() => setIsMenuOpen(false)}
-                          className="w-full text-left px-4 py-3 rounded-xl bg-gray-900 text-white font-black flex items-center gap-3 mt-2"
+                          className="w-full text-left px-4 py-3 rounded-xl bg-gray-900 text-white font-bold flex items-center gap-3 mt-2"
                         >
-                          <Terminal size={20} className="text-pink-500" /> API LAB (DEV)
+                          <Terminal size={20} className="text-pink-500" /> API
+                          LAB (DEV)
                         </Link>
                       )}
                     </>

@@ -236,10 +236,7 @@ export async function adminUpdateCourse(id: string, updates: any) {
 
 export async function adminDeleteCourse(id: string) {
   const supabase = getSupabase();
-  const { error } = await supabase
-    .from("courses")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("courses").delete().eq("id", id);
 
   if (error) throw error;
   return true;
@@ -289,10 +286,7 @@ export async function adminUpdateLesson(id: string, updates: any) {
 
 export async function adminDeleteLesson(id: string) {
   const supabase = getSupabase();
-  const { error } = await supabase
-    .from("lessons")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("lessons").delete().eq("id", id);
 
   if (error) throw error;
   return true;
@@ -344,7 +338,7 @@ export async function adminUpdateVideoModule(id: string, updates: any) {
     .from("video_modules")
     .update({
       ...updates,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq("id", id)
     .select()
@@ -356,10 +350,7 @@ export async function adminUpdateVideoModule(id: string, updates: any) {
 
 export async function adminDeleteVideoModule(id: string) {
   const supabase = getSupabase();
-  const { error } = await supabase
-    .from("video_modules")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("video_modules").delete().eq("id", id);
 
   if (error) throw error;
   return true;
@@ -442,6 +433,110 @@ export async function adminUpdateOrderStatus(
   return data;
 }
 
+export async function adminGetOrderByNumber(
+  orderNumber: string,
+): Promise<any | null> {
+  const supabase = getSupabase();
+
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select(
+      `
+      *,
+      order_items(*),
+      profiles:user_id(full_name, phone)
+    `,
+    )
+    .eq("order_number", orderNumber)
+    .maybeSingle();
+
+  if (error || !order) {
+    if (error?.message?.includes("AbortError")) return null;
+    console.error("Error fetching order:", error);
+    return null;
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "sedang_diproses":
+        return "Sedang Diproses";
+      case "sedang_dikirim":
+        return "Sedang Dikirim";
+      case "selesai":
+        return "Selesai";
+      case "dibatalkan":
+        return "Dibatalkan";
+      default:
+        return status;
+    }
+  };
+
+  return {
+    id: order.id,
+    orderNumber: order.order_number,
+    date:
+      new Date(order.created_at).toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }) +
+      " - " +
+      new Date(order.created_at).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    status: order.status,
+    statusText: getStatusText(order.status),
+    items: order.order_items.map((item: any) => ({
+      id: item.id,
+      name: item.product_name,
+      price: Number(item.unit_price),
+      quantity: item.quantity,
+      image:
+        item.product_image_url ||
+        "https://placehold.co/80x80/ec4899/ffffff?text=Product",
+      cashback: item.cashback_total || 0,
+    })),
+    totalAmount: Number(order.subtotal),
+    customerName: order.customer_name,
+    customerPhone: order.customer_phone,
+    address: order.shipping_address,
+    paymentMethod: order.payment_method || "Unknown",
+    subtotal: Number(order.subtotal),
+    redeemPoints: order.redeem_points || 0,
+    totalPayment: Number(order.total_payment),
+    ppn: Number(order.ppn || 0),
+    shippingCost: Number(order.shipping_cost || 0),
+    deliveryProof: order.delivery_proof_url,
+    notification:
+      order.status === "sedang_diproses"
+        ? {
+            type: "info",
+            message: "Pesanan akan diteruskan ke proses pengiriman.",
+          }
+        : order.status === "sedang_dikirim"
+          ? {
+              type: "confirmation",
+              message:
+                "Jika pesanan sudah diterima, silakan selesaikan pesanan.",
+            }
+          : order.status === "selesai"
+            ? {
+                type: "success",
+                message: "Bukti barang diterima.",
+              }
+            : undefined,
+    // Data tambahan untuk admin
+    userProfile: order.profiles
+      ? {
+          name: order.profiles.full_name,
+          phone: order.profiles.phone,
+        }
+      : null,
+  };
+}
+
 // =============================================================================
 // 5. USER & SALES MANAGEMENT
 // =============================================================================
@@ -469,7 +564,11 @@ export async function adminGetMembers() {
   }));
 }
 
-export async function adminUpdateMemberPoints(userId: string, points: number, reason: string) {
+export async function adminUpdateMemberPoints(
+  userId: string,
+  points: number,
+  reason: string,
+) {
   const supabase = getSupabase();
 
   // 1. Get current balance
@@ -495,10 +594,10 @@ export async function adminUpdateMemberPoints(userId: string, points: number, re
   // 3. Log transaction
   await supabase.from("point_transactions").insert({
     user_id: userId,
-    transaction_type: 'admin_adjustment',
+    transaction_type: "admin_adjustment",
     amount: newBalance - oldBalance,
     balance_after: newBalance,
-    description: reason || "Penyesuaian oleh Admin"
+    description: reason || "Penyesuaian oleh Admin",
   });
 
   return data;
@@ -575,14 +674,17 @@ export async function adminApproveCommission(
   return data;
 }
 
-export async function adminUpdateMembershipStatus(userId: string, status: string) {
+export async function adminUpdateMembershipStatus(
+  userId: string,
+  status: string,
+) {
   const supabase = getSupabase();
 
   const { data, error } = await supabase
     .from("memberships")
     .update({
       status,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId)
     .select()

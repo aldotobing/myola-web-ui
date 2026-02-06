@@ -25,6 +25,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import Image from "next/image";
+import { formatIndoDate } from "@/utils/formatDate";
 
 export default function MembershipDetailPage() {
   const { user, signOut } = useAuth();
@@ -353,7 +354,8 @@ export default function MembershipDetailPage() {
                   />
 
                   <p className="text-gray-900 text-xs md:text-base font-semibold">
-                    Berakhir pada {user.memberUntil || "10 Januari 2026"}
+                    Berakhir pada{" "}
+                    {formatIndoDate(user.memberUntil) || "10 Januari 2026"}
                   </p>
                 </div>
 

@@ -3,7 +3,8 @@
 
 // app/tentang-kami/page.tsx
 import Image from "next/image";
-import { Users, MapPin, Award, BookOpen, Palette } from "lucide-react";
+import { motion } from "framer-motion";
+import AnimatedSection from "@/components/ui/AnimatedSection";
 
 export default function AboutPage() {
   const teamMembers = [
@@ -77,12 +78,27 @@ export default function AboutPage() {
             {/* Content */}
             <div className="relative z-10 h-full max-w-7xl mx-auto px-4 flex items-center">
               <div className="grid md:grid-cols-2 gap-8 items-center w-full">
-                {/* Left Content */}
-                <div className="text-white max-w-2xl">
-                  <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                {/* Left Content - Animated */}
+                <motion.div
+                  className="text-white max-w-2xl"
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <motion.h1
+                    className="text-5xl md:text-6xl font-bold mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                  >
                     Tentang Kami
-                  </h1>
-                  <p className="text-lg md:text-xl leading-relaxed">
+                  </motion.h1>
+                  <motion.p
+                    className="text-lg md:text-xl leading-relaxed"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                  >
                     Kami adalah akademi online salon yang percaya bahwa rambut
                     adalah <span className="font-bold">alat ekspresi diri</span>{" "}
                     untuk semua jenis <span className="font-bold">kelamin</span>
@@ -91,11 +107,16 @@ export default function AboutPage() {
                     <span className="font-bold">produk berkualitas</span>, kami
                     bantu para hairstylist meningkatkan keterampilan, skill
                     ✨/levei — dan lebih hingga praktik di salon. ✨
-                  </p>
-                </div>
+                  </motion.p>
+                </motion.div>
 
-                {/* Right Image */}
-                <div className="hidden md:block">
+                {/* Right Image - Animated */}
+                <motion.div
+                  className="hidden md:block"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                >
                   <div className="relative h-96 rounded-2xl overflow-hidden shadow-2xl">
                     <img
                       src="/images/background_about.png"
@@ -103,7 +124,7 @@ export default function AboutPage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -113,21 +134,27 @@ export default function AboutPage() {
       {/* Tagline Section */}
       <section className="py-20 px-2 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
         <div className="max-w-5xl mx-auto text-justify">
-          <h2 className="text-3xl sm:text-3xl md:text-5xl lg:text-6xl leading-tight">
-            <span className="text-pink-600 font-bold">Coloring</span>
-            <span className="text-gray-900 font-medium md:text-4xl lg:text-5xl">
-              , styling,
-            </span>
-            <span className="text-pink-600 font-bold">cutting</span>
-            <span className="text-gray-900 font-medium md:text-4xl lg:text-5xl">
-              , and every technique
-            </span>
-          </h2>
+          <AnimatedSection>
+            <h2 className="text-3xl sm:text-3xl md:text-5xl lg:text-6xl leading-tight">
+              <span className="text-pink-600 font-bold">Coloring</span>
+              <span className="text-gray-900 font-medium md:text-4xl lg:text-5xl">
+                , styling,
+              </span>
+              <span className="text-pink-600 font-bold">cutting</span>
+              <span className="text-gray-900 font-medium md:text-4xl lg:text-5xl">
+                , and every technique
+              </span>
+            </h2>
+          </AnimatedSection>
 
-          <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gray-900 font-medium mt-8">
-            that defines beauty —
-            <span className="text-pink-600 font-bld">all in one academy.</span>
-          </p>
+          <AnimatedSection delay={0.2}>
+            <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gray-900 font-medium mt-8">
+              that defines beauty —
+              <span className="text-pink-600 font-bld">
+                all in one academy.
+              </span>
+            </p>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -137,51 +164,61 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left - Images */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative w-full h-64 overflow-hidden shadow-2xl ">
-                <Image
-                  src="/images/about1.png"
-                  alt="Salon Experience"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="relative w-full h-80 overflow-hidden shadow-2xl  mt-12">
-                <Image
-                  src="/images/about2.png"
-                  alt="Training Session"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="relative w-full h-64 overflow-hidden shadow-2xl  -mt-16">
-                <Image
-                  src="/images/about3.png"
-                  alt="Student Learning"
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <AnimatedSection delay={0} direction="left">
+                <div className="relative w-full h-64 overflow-hidden shadow-2xl ">
+                  <Image
+                    src="/images/about1.png"
+                    alt="Salon Experience"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </AnimatedSection>
+
+              <AnimatedSection delay={0.2} direction="right">
+                <div className="relative w-full h-80 overflow-hidden shadow-2xl  mt-12">
+                  <Image
+                    src="/images/about2.png"
+                    alt="Training Session"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </AnimatedSection>
+
+              <AnimatedSection delay={0.4} direction="left">
+                <div className="relative w-full h-64 overflow-hidden shadow-2xl  -mt-16">
+                  <Image
+                    src="/images/about3.png"
+                    alt="Student Learning"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </AnimatedSection>
             </div>
 
             {/* Right - Content */}
-            <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Perjalanan <span className="text-pink-500">Kami</span>
-              </h2>
-              <p className="text-pink-500 font-semibold text-lg mb-4">
-                Dari salon kecil ke platform edukasi global.
-              </p>
-              <p className="text-gray-700 leading-relaxed text-lg mb-4">
-                Kami berawal dari salon lokal yang ingin buka akses belajar bagi
-                semua hairstylist.
-              </p>
-              <p className="text-gray-700 leading-relaxed text-lg mb-4">
-                Kini, lewat kursus online dan produk profesional, kami bantu
-                ribuan murid tumbuh{" "}
-                <span className="font-bold">dan menciptakan tren</span> baru
-                setiap hari. 💅
-              </p>
-            </div>
+            <AnimatedSection direction="right">
+              <div>
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                  Perjalanan <span className="text-pink-500">Kami</span>
+                </h2>
+                <p className="text-pink-500 font-semibold text-lg mb-4">
+                  Dari salon kecil ke platform edukasi global.
+                </p>
+                <p className="text-gray-700 leading-relaxed text-lg mb-4">
+                  Kami berawal dari salon lokal yang ingin buka akses belajar
+                  bagi semua hairstylist.
+                </p>
+                <p className="text-gray-700 leading-relaxed text-lg mb-4">
+                  Kini, lewat kursus online dan produk profesional, kami bantu
+                  ribuan murid tumbuh{" "}
+                  <span className="font-bold">dan menciptakan tren</span> baru
+                  setiap hari. 💅
+                </p>
+              </div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
@@ -189,41 +226,51 @@ export default function AboutPage() {
       {/* Team Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-pink-50 to-purple-50">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-12 flex flex-col md:flex-row justify-between md:items-center">
-            <h2 className="text-5xl font-bold text-gray-900 mb-4 md:mb-0">
-              Tim <span className="text-pink-500">Kami</span>
-            </h2>
-            <p className="text-xl text-gray-700 leading-relaxed max-w-xl">
-              Kami adalah{" "}
-              <span className="font-bold text-pink-500">hairstylist</span>,{" "}
-              <span className="font-bold text-pink-500">
-                professional educator
-              </span>
-              , dan{" "}
-              <span className="font-bold text-pink-500">beauty innovators</span>{" "}
-              yang punya satu misi: bantu kamu tampil percaya diri lewat rambut
-              yang sehat dan penuh warna.
-            </p>
-          </div>
+          <AnimatedSection>
+            <div className="mb-12 flex flex-col md:flex-row justify-between md:items-center">
+              <h2 className="text-5xl font-bold text-gray-900 mb-4 md:mb-0">
+                Tim <span className="text-pink-500">Kami</span>
+              </h2>
+              <p className="text-xl text-gray-700 leading-relaxed max-w-xl">
+                Kami adalah{" "}
+                <span className="font-bold text-pink-500">hairstylist</span>,{" "}
+                <span className="font-bold text-pink-500">
+                  professional educator
+                </span>
+                , dan{" "}
+                <span className="font-bold text-pink-500">
+                  beauty innovators
+                </span>{" "}
+                yang punya satu misi: bantu kamu tampil percaya diri lewat
+                rambut yang sehat dan penuh warna.
+              </p>
+            </div>
+          </AnimatedSection>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {teamMembers.map((member) => (
-              <div key={member.id} className=" overflow-hidden  ">
-                <div className="relative  h-80 overflow-hidden bg-gray-100">
-                  <Image
-                    src={member.image}
-                    alt={member.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500 shadow-xl rounded-sm "
-                  />
-                </div>
-                <div className="pt-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {member.name}
-                  </h3>
-                  <p className="text-gray-600">{member.position}</p>
-                </div>
-              </div>
+            {teamMembers.map((member, index) => (
+              <AnimatedSection key={member.id} delay={index * 0.1}>
+                <motion.div
+                  className="overflow-hidden"
+                  whileHover={{ y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="relative h-80 overflow-hidden bg-gray-100">
+                    <Image
+                      src={member.image}
+                      alt={member.name}
+                      fill
+                      className="object-cover transition-transform duration-500 shadow-xl rounded-sm hover:scale-110"
+                    />
+                  </div>
+                  <div className="pt-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {member.name}
+                    </h3>
+                    <p className="text-gray-600">{member.position}</p>
+                  </div>
+                </motion.div>
+              </AnimatedSection>
             ))}
           </div>
         </div>
@@ -232,39 +279,45 @@ export default function AboutPage() {
       {/* Stats Section */}
       <section className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12 ">
-            Sekilas Tentang <span className="text-pink-500">Kami</span>
-          </h2>
+          <AnimatedSection>
+            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12 ">
+              Sekilas Tentang <span className="text-pink-500">Kami</span>
+            </h2>
+          </AnimatedSection>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 transition-all duration-300"
-              >
-                <div className="flex items-center gap-4">
-                  {/* Image Icon Container */}
-                  <div
-                    className={`flex-shrink-0 w-16 h-16 rounded-xl p-3 flex items-center justify-center`}
-                  >
-                    {stat.image && (
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={stat.image}
-                          alt={stat.title}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
+              <AnimatedSection key={index} delay={index * 0.1}>
+                <motion.div
+                  className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 transition-all duration-300"
+                  whileHover={{
+                    scale: 1.05,
+                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Image Icon Container */}
+                    <div className="flex-shrink-0 w-16 h-16 rounded-xl p-3 flex items-center justify-center">
+                      {stat.image && (
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={stat.image}
+                            alt={stat.title}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Text */}
-                  <p className="text-base font-semibold text-gray-900 leading-relaxed">
-                    {stat.title}
-                  </p>
-                </div>
-              </div>
+                    {/* Text */}
+                    <p className="text-base font-semibold text-gray-900 leading-relaxed">
+                      {stat.title}
+                    </p>
+                  </div>
+                </motion.div>
+              </AnimatedSection>
             ))}
           </div>
         </div>
