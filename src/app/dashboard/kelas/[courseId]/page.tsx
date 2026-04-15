@@ -24,8 +24,13 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Course, Video } from "@/types/kelas";
-import { completeVideo, getCourseById, getCurrentVideo } from "@/lib/service/member/kelas";
+import {
+  completeVideo,
+  getCourseById,
+  getCurrentVideo,
+} from "@/lib/service/member/kelas";
 import { Play } from "next/font/google";
+import { url } from "inspector/promises";
 
 export default function KelasDetailPage() {
   const { user, signOut } = useAuth();
@@ -100,11 +105,19 @@ export default function KelasDetailPage() {
   };
 
   // Get YouTube embed URL
-  const getYouTubeEmbedUrl = (url: string) => {
-    const videoId =
-      url.split("youtu.be/")[1]?.split("?")[0] ||
-      url.split("v=")[1]?.split("&")[0];
-    return `https://www.youtube.com/embed/${videoId}`;
+  // const getYouTubeEmbedUrl = (url: string) => {
+  //   const videoId =
+  //     url.split("youtu.be/")[1]?.split("?")[0] ||
+  //     url.split("v=")[1]?.split("&")[0];
+  //   return `https://www.youtube.com/embed/${videoId}`;
+  // };
+
+  // Get Google Drive embed URL
+  const getGoogleDriveEmbedUrl = (url: string) => {
+    const fileId =
+      url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1] ||
+      url.match(/id=([a-zA-Z0-9_-]+)/)?.[1];
+    return `https://drive.google.com/file/d/${fileId}/preview`;
   };
 
   if (loading) {
@@ -298,10 +311,10 @@ export default function KelasDetailPage() {
                           isCurrent
                             ? "bg-pink-50 border-l-4 border-pink-500"
                             : video.completed
-                            ? "bg-green-50 hover:bg-green-100"
-                            : isLocked
-                            ? "bg-gray-50 cursor-not-allowed opacity-60"
-                            : "hover:bg-gray-50"
+                              ? "bg-green-50 hover:bg-green-100"
+                              : isLocked
+                                ? "bg-gray-50 cursor-not-allowed opacity-60"
+                                : "hover:bg-gray-50"
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -322,10 +335,10 @@ export default function KelasDetailPage() {
                                 isCurrent
                                   ? "text-pink-600"
                                   : video.completed
-                                  ? "text-green-900"
-                                  : isLocked
-                                  ? "text-gray-400"
-                                  : "text-gray-900"
+                                    ? "text-green-900"
+                                    : isLocked
+                                      ? "text-gray-400"
+                                      : "text-gray-900"
                               }`}
                             >
                               {video.title}
@@ -348,13 +361,24 @@ export default function KelasDetailPage() {
                 {/* Video Player */}
                 {currentVideo && (
                   <div className="aspect-video w-full bg-black">
-                    <iframe
-                      src={getYouTubeEmbedUrl(currentVideo.youtubeUrl)}
+                    {/* <iframe
+                      src={getGoogleDriveEmbedUrl(currentVideo.youtubeUrl)}
                       title={currentVideo.title}
                       className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allow="autoplay"
                       allowFullScreen
-                    ></iframe>
+                    ></iframe> */}
+                    <div className="relative w-full h-full">
+                      <iframe
+                        src={getGoogleDriveEmbedUrl(currentVideo.youtubeUrl)}
+                        title={currentVideo.title}
+                        className="w-full h-full"
+                        allow="autoplay"
+                        allowFullScreen
+                      ></iframe>
+                      {/* Block pojok kanan atas */}
+                      <div className="absolute top-0 right-0 w-12 h-12 bg-black z-10" />
+                    </div>
                   </div>
                 )}
 
