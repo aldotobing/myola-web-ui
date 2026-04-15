@@ -44,11 +44,7 @@ export default function AdminUsersPage() {
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
   // Points Modal State
-  const [isPointsModalOpen, setIsPointsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [newPoints, setNewPoints] = useState("");
-  const [pointReason, setPointReason] = useState("");
-  const [isUpdatingPoints, setIsUpdatingPoints] = useState(false);
 
   // Status Modal State
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -136,38 +132,10 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleOpenPoints = (member: any) => {
-    setSelectedUser(member);
-    setNewPoints(member.points_balance.toString());
-    setPointReason("");
-    setIsPointsModalOpen(true);
-  };
-
   const handleOpenStatus = (member: any) => {
     setSelectedUser(member);
     setSelectedStatus(member.membership_status);
     setIsStatusModalOpen(true);
-  };
-
-  const handleUpdatePoints = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUser) return;
-
-    setIsUpdatingPoints(true);
-    try {
-      await adminUpdateMemberPoints(
-        selectedUser.user_id,
-        parseInt(newPoints),
-        pointReason,
-      );
-      toast.success("Poin berhasil diperbarui!");
-      setIsPointsModalOpen(false);
-      mutate("admin-members");
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsUpdatingPoints(false);
-    }
   };
 
   const handleUpdateStatus = async (e: React.FormEvent) => {
@@ -396,14 +364,6 @@ export default function AdminUsersPage() {
                             >
                               <Eye size={16} />
                             </button>
-
-                            <button
-                              onClick={() => handleOpenPoints(member)}
-                              className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                              title="Edit Poin"
-                            >
-                              <Coins size={16} />
-                            </button>
                           </div>
                         </td>
                       </tr>
@@ -498,63 +458,6 @@ export default function AdminUsersPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Adjust Points Modal */}
-      {isPointsModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-[32px] max-w-sm w-full p-8 shadow-2xl animate-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Coins className="text-blue-500" /> Atur Saldo Poin
-              </h3>
-              <button onClick={() => setIsPointsModalOpen(false)}>
-                <X className="text-gray-400" />
-              </button>
-            </div>
-            <p className="text-sm text-gray-500 mb-6">
-              Sesuaikan poin untuk <strong>{selectedUser?.full_name}</strong>.
-              Saldo saat ini: {selectedUser?.points_balance?.toLocaleString()}
-            </p>
-            <form onSubmit={handleUpdatePoints} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
-                  Jumlah Poin Baru
-                </label>
-                <input
-                  type="number"
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg"
-                  value={newPoints}
-                  onChange={(e) => setNewPoints(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
-                  Alasan Penyesuaian
-                </label>
-                <textarea
-                  required
-                  placeholder="Contoh: Bonus Event Khusus"
-                  className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm"
-                  rows={2}
-                  value={pointReason}
-                  onChange={(e) => setPointReason(e.target.value)}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isUpdatingPoints}
-                className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isUpdatingPoints && (
-                  <Loader2 className="animate-spin" size={18} />
-                )}{" "}
-                Simpan Perubahan
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Adjust Status Modal */}
       {isStatusModalOpen && (

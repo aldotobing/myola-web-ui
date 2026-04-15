@@ -22,7 +22,8 @@ export default function CheckoutPage() {
 
   // User status checks
   const isLoggedIn = !!user;
-  const isMember = isLoggedIn && (isMemberActive(user?.memberUntil) || user?.role === 'admin');
+  const isMember =
+    isLoggedIn && (isMemberActive(user?.memberUntil) || user?.role === "admin");
 
   // Feature eligibility based on user status
   const isEligibleCashback = isMember; // Only active members get cashback
@@ -97,7 +98,7 @@ export default function CheckoutPage() {
   // Calculations
   const subtotal = checkoutItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
+    0,
   );
   const totalAfterRedeem = Math.max(0, subtotal - redeemPoints);
   const ppn = Math.round(totalAfterRedeem * 0.11);
@@ -107,7 +108,7 @@ export default function CheckoutPage() {
   const totalCashback = isEligibleCashback
     ? checkoutItems.reduce(
         (sum, item) => sum + item.cashback * item.quantity,
-        0
+        0,
       )
     : 0;
 
@@ -161,7 +162,8 @@ export default function CheckoutPage() {
 
       const result = await response.json();
 
-      if (!response.ok) throw new Error(result.error || "Failed to create order");
+      if (!response.ok)
+        throw new Error(result.error || "Failed to create order");
 
       // 2. Store payment data for payment page
       const paymentData = {
@@ -206,6 +208,23 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
           Checkout
         </h1>
+
+        {/* Return Policy Alert */}
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div className="flex-1">
+              <p className="font-bold text-red-900 mb-1">
+                Kebijakan Pembatalan & Return
+              </p>
+              <p className="text-sm text-red-700">
+                Pesanan tidak dapat dibatalkan atau di-return setelah checkout.
+                Return hanya dapat diproses melalui{" "}
+                <span className="font-semibold">Coretax</span>.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Guest Warning */}
         {!isLoggedIn && (
@@ -345,8 +364,8 @@ export default function CheckoutPage() {
                       <div className="flex-1">
                         <p className="font-bold text-gray-900 mb-1">
                           Kamu punya{" "}
-                          {(user?.points_balance || 0).toLocaleString("id-ID")} Poin
-                          MOLA
+                          {(user?.points_balance || 0).toLocaleString("id-ID")}{" "}
+                          Poin MOLA
                         </p>
                         <p className="text-sm text-gray-600 mb-3">
                           Masukkan jumlah poin yang ingin digunakan.
@@ -674,7 +693,7 @@ export default function CheckoutPage() {
                     {checkoutItems
                       .reduce(
                         (sum, item) => sum + item.cashback * item.quantity,
-                        0
+                        0,
                       )
                       .toLocaleString("id-ID")}{" "}
                     poin dari pembelian ini!
